@@ -171,7 +171,7 @@ export async function PATCH(request: NextRequest) {
     // Validate input using Zod
     const parsed = updateProfileSchema.safeParse(body);
     if (!parsed.success) {
-      const errors = parsed.error.errors.map((e) => ({
+      const errors = parsed.error.issues.map((e) => ({
         field: e.path.join('.'),
         message: e.message,
       }));
