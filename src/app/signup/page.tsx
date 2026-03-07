@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { signupPatient } from '@/lib/api';
+import { useClinicSettings } from '@/components/ClinicSettingsContext';
 
 /* ── Eye icon SVGs ── */
 function EyeIcon() {
@@ -39,6 +40,9 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { t } = useLanguage();
+  
+  // Get dynamic clinic settings
+  const { clinicName, clinicLogo } = useClinicSettings();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -118,9 +122,17 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg py-12 px-4">
       <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg dark:shadow-2xl dark:border dark:border-dark-border p-8 max-w-lg w-full">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
-            <span className="text-white font-bold text-xl">B</span>
-          </div>
+          {clinicLogo ? (
+            <img 
+              src={clinicLogo} 
+              alt={clinicName}
+              className="w-12 h-12 rounded-full object-cover mx-auto mb-3 shadow-glow"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-white font-bold text-xl">B</span>
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-200">{t('Create Account', 'ખાતું બનાવો')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">{t('Sign up to book appointments easily', 'એપોઇન્ટમેન્ટ બુક કરવા માટે સાઇન અપ કરો')}</p>
         </div>

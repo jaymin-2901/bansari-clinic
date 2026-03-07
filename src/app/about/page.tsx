@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
-import { fetchSettings, getImageUrl } from '@/lib/api';
+import { fetchSettings, getImageUrl, fetchClinicImages } from '@/lib/api';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 
 interface AboutSettings {
   about_doctor_name?: string;
@@ -18,14 +20,28 @@ interface AboutSettings {
   [key: string]: string | undefined;
 }
 
+interface ClinicImage {
+  id: number;
+  image_path: string;
+  created_at: string;
+}
+
 export default function AboutPage() {
   const { t } = useLanguage();
   const [settings, setSettings] = useState<AboutSettings>({});
+  const [clinicImages, setClinicImages] = useState<ClinicImage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
-    fetchSettings('about').then((data) => {
-      setSettings(data);
+    // Fetch both settings and clinic images in parallel
+    Promise.all([
+      fetchSettings('about'),
+      fetchClinicImages()
+    ]).then(([settingsData, images]) => {
+      setSettings(settingsData);
+      setClinicImages(images);
       setLoading(false);
     });
   }, []);
@@ -218,16 +234,36 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ═══ Clinic Image ═══ */}
+      {/* ═══ Clinic Images Gallery ═══ */}
       <section className="section-padding bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-200 mb-4">{t('Our Clinic', 'અમારું ક્લિનિક')}</h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">{t('A warm, welcoming space designed for your comfort and healing.', 'તમારા આરામ અને ઉપચાર માટે ડિઝાઇન કરેલ ઉષ્માભર્યું, આવકારદાયક સ્થળ.')}</p>
-          {clinicImg ? (
+          
+          {/* Dynamic Gallery from clinic_images table */}
+          {clinicImages && clinicImages.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+              {clinicImages.map((img) => (
+                <div key={img.id} className="relative group overflow-hidden rounded-xl shadow-lg">
+                  <img 
+                    src={img.image_path} 
+                    alt="Clinic Image" 
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
+                    onError={(e) => { 
+                      (e.target as HTMLImageElement).style.display = 'none'; 
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
+                </div>
+              ))}
+            </div>
+          ) : clinicImg ? (
+            /* Fallback to single clinic image from settings */
             <div className="rounded-2xl overflow-hidden shadow-xl max-w-4xl mx-auto">
               <img src={clinicImg} alt="Bansari Homeopathy Clinic" className="w-full h-auto" />
             </div>
           ) : (
+            /* Default placeholders when no images */
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               {[
                 t('Reception Area', 'રિસેપ્શન એરિયા'),

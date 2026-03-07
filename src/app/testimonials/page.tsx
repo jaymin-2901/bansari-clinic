@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
-import { getImageUrl } from '@/lib/api';
+import { fetchTestimonials, getImageUrl } from '@/lib/api';
 import { motion, useInView } from 'framer-motion';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 
 interface Testimonial {
   id: number;
@@ -118,21 +120,22 @@ function BeforeAfterSlider({
 }
 
 /* ── Single image card (Before or After) ── */
-function TestimonialImage({ src, alt, label }: { src: string | null; alt: string; label: string }) {
+function TestimonialImage({ src, alt, label, onClick }: { src: string | null; alt: string; label: string; onClick?: () => void }) {
   const [errored, setErrored] = useState(false);
   const imgUrl = getImageUrl(src);
 
   return (
     <div className="flex-1 min-w-0">
       <span className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5 text-center">{label}</span>
-      <div className="relative aspect-[4/5] rounded-xl overflow-hidden bg-gray-100 dark:bg-dark-card group">
+      <div 
+        className="relative aspect-[4/5] rounded-xl overflow-hidden bg-gray-100 dark:bg-dark-card group cursor-pointer"
+        onClick={onClick}
+      >
         {imgUrl && !errored ? (
-          <Image
+          <img
             src={imgUrl}
             alt={alt}
-            fill
-            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
             onError={() => setErrored(true)}
           />
         ) : (
@@ -143,6 +146,14 @@ function TestimonialImage({ src, alt, label }: { src: string | null; alt: string
             <span className="text-xs font-medium">{`No ${label} Photo`}</span>
           </div>
         )}
+        {/* Click to enlarge overlay */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-dark-card/90 rounded-full p-2 shadow-lg">
+            <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -170,16 +181,17 @@ export default function TestimonialsPage() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'with-images' | 'text-only'>('all');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const { t } = useLanguage();
 
   useEffect(() => {
-    fetch(`${API_URL}/testimonials.php`)
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success) setTestimonials(json.data);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    fetchTestimonials().then((data) => {
+      setTestimonials(data || []);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
   }, []);
 
   // Sample fallback
@@ -406,6 +418,26 @@ export default function TestimonialsPage() {
           </FadeIn>
         </div>
       </section>
+
+      {/* Lightbox for enlarged image view */}
+      <Lightbox
+        open={lightboxOpen}
+        close={() => setLightboxOpen(false)}
+        index={lightboxIndex}
+        slides={displayTestimonials
+          .filter(hasImages)
+          .flatMap((t) => [
+            t.before_image ? { src: getImageUrl(t.before_image)!, alt: `${t.patient_name} - Before` } : null,
+            t.after_image ? { src: getImageUrl(t.after_image)!, alt: `${t.patient_name} - After` } : null,
+          ])
+          .filter(Boolean) as { src: string; alt: string }[]}
+        styles={{
+          container: { backgroundColor: 'rgba(0, 0, 0, 0.95)' },
+        }}
+        carousel={{ preload: 2 }}
+        animation={{ fade: 250, swipe: 250 }}
+        controller={{ closeOnBackdropClick: true }}
+      />
     </>
   );
 }

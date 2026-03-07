@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BACKEND_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api';
 
 export default function PrivacyPolicyPage() {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     async function fetchPage() {
       try {
         const res = await fetch(
-          `${BACKEND_URL}/api/clinic/legal_page.php?slug=privacy-policy`,
+          `${API_URL}/legal_page.php?slug=privacy-policy`,
           { cache: 'no-store' }
         );
         if (res.ok) {
@@ -19,9 +20,12 @@ export default function PrivacyPolicyPage() {
           if (json.success && json.data?.content) {
             setContent(json.data.content);
           }
+        } else {
+          setError('Failed to load privacy policy');
         }
-      } catch {
-        // Fallback handled below
+      } catch (err) {
+        setError('Error loading privacy policy');
+        console.error('Privacy policy fetch error:', err);
       } finally {
         setLoading(false);
       }

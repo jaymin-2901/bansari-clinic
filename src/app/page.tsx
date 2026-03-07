@@ -3,8 +3,26 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
-import { fetchTestimonials } from '@/lib/api';
+import { fetchTestimonials, fetchSettings, getImageUrl } from '@/lib/api';
 import { motion, useInView } from 'framer-motion';
+
+/* ── Hook to detect mobile screen ── */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    // Check on mount and resize
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+}
 
 interface Testimonial {
   id: number;
@@ -13,6 +31,14 @@ interface Testimonial {
   treatment_description: string;
   testimonial_text: string;
   rating: number;
+}
+
+interface HomeSettings {
+  home_hero_title?: string;
+  home_hero_subtitle?: string;
+  home_hero_description?: string;
+  home_hero_image?: string;
+  home_hero_image_mobile?: string;
 }
 
 /* ── Reusable fade-in wrapper ── */
@@ -36,8 +62,23 @@ export default function HomePage() {
   const { t } = useLanguage();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [settings, setSettings] = useState<HomeSettings>({});
+  const [loadingSettings, setLoadingSettings] = useState(true);
+  const isMobile = useIsMobile();
+
+  // Determine hero image based on screen size
+  const heroImage = isMobile 
+    ? (settings.home_hero_image_mobile || settings.home_hero_image)
+    : settings.home_hero_image;
 
   useEffect(() => {
+    // Fetch settings
+    fetchSettings('home').then((data) => {
+      setSettings(data || {});
+      setLoadingSettings(false);
+    });
+    
+    // Fetch testimonials
     fetchTestimonials().then((data) => {
       setTestimonials((data || []).slice(0, 6));
     });
@@ -62,10 +103,29 @@ export default function HomePage() {
       {/* ═══════════════════════════════════════════ */}
       {/* ═══ HERO SECTION ═══ */}
       {/* ═══════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-teal-50/30 dark:from-dark-bg dark:via-dark-surface dark:to-dark-bg">
-        {/* Decorative blobs */}
-        <div className="absolute top-10 right-0 w-[500px] h-[500px] bg-primary-100/30 dark:bg-teal-900/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none animate-float" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-100/20 dark:bg-teal-300/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+      {/* 
+        Hero background image logic:
+        - Mobile (≤768px): Use mobile image if available, otherwise fallback to desktop image
+        - Desktop (>768px): Use desktop image 
+      */}
+      <section 
+        className="relative overflow-hidden"
+        style={heroImage ? {
+          backgroundImage: `url(${getImageUrl(heroImage) || ''})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        } : undefined}
+      >
+        {/* Background overlay - always present for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/95 via-white/95 to-teal-50/95 dark:from-dark-bg/95 dark:via-dark-surface/95 dark:to-dark-bg/95" />
+        
+        {/* Decorative blobs - only show when no hero image */}
+        {!(isMobile ? (settings.home_hero_image_mobile || settings.home_hero_image) : settings.home_hero_image) && (
+          <>
+            <div className="absolute top-10 right-0 w-[500px] h-[500px] bg-primary-100/30 dark:bg-teal-900/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none animate-float" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-100/20 dark:bg-teal-300/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
+          </>
+        )}
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-28 lg:py-36">
           <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -87,9 +147,9 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading text-gray-900 dark:text-white leading-[1.1] tracking-tight mb-6"
               >
-                {t('Gentle Healing,', 'હળવા ઉપચાર,')}{' '}
+                {settings.home_hero_title || t('Gentle Healing,', 'હળવા ઉપચાર,')}{' '}
                 <span className="text-primary-500 dark:text-teal-300">
-                  {t('Lasting Results', 'કાયમી પરિણામો')}
+                  {settings.home_hero_subtitle || (settings.home_hero_title ? '' : t('Lasting Results', 'કાયમી પરિણામો'))}
                 </span>
               </motion.h1>
 
@@ -99,10 +159,10 @@ export default function HomePage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-xl"
               >
-                {t(
+                {settings.home_hero_description || (settings.home_hero_title ? '' : t(
                   'Experience personalized homeopathic treatment with Dr. Bansari Patel. Holistic care for chronic and acute conditions, treating mind, body and spirit.',
                   'ડૉ. બંસરી પટેલ સાથે વ્યક્તિગત હોમિયોપેથિક સારવારનો અનુભવ કરો. ક્રોનિક અને એક્યુટ રોગો માટે મન, શરીર અને આત્માની સંપૂર્ણ સંભાળ.'
-                )}
+                ))}
               </motion.p>
 
               <motion.div

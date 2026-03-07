@@ -26,13 +26,13 @@ export default function ContactPage() {
     fetchSettings('contact').then(setSettings);
   }, []);
 
-  const address = settings.contact_address || 'Bansari Homeopathy Clinic, Near City Hospital, Main Road, Ahmedabad, Gujarat 380001';
-  const phone = settings.contact_phone || '+91 98765 43210';
-  const whatsapp = settings.contact_whatsapp || '+91 98765 43210';
-  const email = settings.contact_email || 'info@bansarihomeopathy.com';
+  const address = settings.contact_address || '';
+  const phone = settings.contact_phone || '';
+  const whatsapp = settings.contact_whatsapp || '';
+  const email = settings.contact_email || '';
   const mapIframe = settings.contact_map_iframe || '';
-  const mapUrl = settings.contact_map_url || `https://www.google.com/maps/search/${encodeURIComponent(address)}`;
-  const hours = settings.contact_hours || 'Mon - Sat: 9:30 AM - 1:00 PM, 5:00 PM - 8:00 PM\nSunday: Closed';
+  const mapUrl = settings.contact_map_url || (address ? `https://www.google.com/maps/search/${encodeURIComponent(address)}` : '');
+  const hours = settings.contact_hours || '';
   const whatsappNumber = whatsapp.replace(/[^0-9]/g, '');
 
   const handleSubmit = async (e: FormEvent) => {
@@ -73,6 +73,7 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 -mt-16 relative z-10">
             {/* Phone */}
+            {phone && (
             <a href={`tel:${phone.replace(/\s/g, '')}`} className="card text-center hover:-translate-y-1 transition-transform group">
               <div className="w-14 h-14 bg-primary-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary-500 transition-colors">
                 <svg className="w-7 h-7 text-primary-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,8 +83,10 @@ export default function ContactPage() {
               <h3 className="font-bold text-gray-900 dark:text-gray-200 mb-1">{t('Call Us', 'ફોન કરો')}</h3>
               <p className="text-primary-600 dark:text-dark-accent font-medium">{phone}</p>
             </a>
+            )}
 
             {/* WhatsApp */}
+            {whatsapp && (
             <a href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(t('Hello Dr. Bansari, I would like to book an appointment.', 'નમસ્તે ડૉ. બંસરી, હું એપોઇન્ટમેન્ટ બુક કરવા માંગુ છું.'))}`} target="_blank" rel="noopener noreferrer" className="card text-center hover:-translate-y-1 transition-transform group">
               <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500 transition-colors">
                 <svg className="w-7 h-7 text-green-600 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -93,8 +96,10 @@ export default function ContactPage() {
               <h3 className="font-bold text-gray-900 dark:text-gray-200 mb-1">{t('WhatsApp', 'WhatsApp')}</h3>
               <p className="text-green-600 font-medium">{t('Chat Now', 'હમણાં ચેટ કરો')}</p>
             </a>
+            )}
 
             {/* Email */}
+            {email && (
             <a href={`mailto:${email}`} className="card text-center hover:-translate-y-1 transition-transform group">
               <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500 transition-colors">
                 <svg className="w-7 h-7 text-blue-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,8 +109,10 @@ export default function ContactPage() {
               <h3 className="font-bold text-gray-900 dark:text-gray-200 mb-1">{t('Email', 'ઈમેઇલ')}</h3>
               <p className="text-blue-600 font-medium text-sm">{email}</p>
             </a>
+            )}
 
             {/* Hours */}
+            {hours && (
             <div className="card text-center">
               <div className="w-14 h-14 bg-accent-50 rounded-xl flex items-center justify-center mx-auto mb-4">
                 <svg className="w-7 h-7 text-accent-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,6 +122,7 @@ export default function ContactPage() {
               <h3 className="font-bold text-gray-900 dark:text-gray-200 mb-1">{t('Working Hours', 'કાર્ય સમય')}</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm whitespace-pre-line">{hours}</p>
             </div>
+            )}
           </div>
         </div>
       </section>
@@ -127,6 +135,7 @@ export default function ContactPage() {
             <div>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-200 mb-6">{t('Find Us', 'અમને શોધો')}</h2>
 
+              {address && (
               <div className="flex items-start space-x-4 mb-8">
                 <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
                   <svg className="w-6 h-6 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,6 +148,7 @@ export default function ContactPage() {
                   <p className="text-gray-600 dark:text-gray-400 whitespace-pre-line">{address}</p>
                 </div>
               </div>
+              )}
 
               {/* Map */}
               {mapIframe ? (
@@ -153,7 +163,7 @@ export default function ContactPage() {
                     referrerPolicy="no-referrer-when-downgrade"
                   />
                 </div>
-              ) : (
+              ) : mapUrl ? (
                 <div className="rounded-xl overflow-hidden shadow-lg h-80 bg-gray-200 flex items-center justify-center">
                   <div className="text-center text-gray-500">
                     <svg className="w-16 h-16 mx-auto mb-2 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -162,9 +172,10 @@ export default function ContactPage() {
                     <p className="font-medium">{t('Map Loading...', 'નકશો લોડ થઈ રહ્યો છે...')}</p>
                   </div>
                 </div>
-              )}
+              ) : null}
 
               {/* Directions button */}
+              {mapUrl && (
               <a
                 href={mapUrl}
                 target="_blank"
@@ -176,6 +187,7 @@ export default function ContactPage() {
                 </svg>
                 {t('Get Directions', 'દિશાનિર્દેશ મેળવો')}
               </a>
+              )}
             </div>
 
             {/* Right: Contact Form */}
@@ -228,7 +240,7 @@ export default function ContactPage() {
                       className="input-field"
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                      placeholder="+91 98765 43210"
+                      placeholder="+91 63543 88539"
                     />
                   </div>
                 </div>
@@ -279,3 +291,4 @@ export default function ContactPage() {
     </>
   );
 }
+

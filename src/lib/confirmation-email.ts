@@ -37,6 +37,17 @@ function getSmtpConfig() {
 }
 
 /**
+ * Get clinic address from database settings API
+ * Always returns the new correct address (hardcoded to ensure consistency)
+ */
+async function getClinicAddress(): Promise<string> {
+  // Always use the new correct address
+  const newAddress = '212 A, Ratnadeep Flora 2nd Floor, Opposite Sv Square, Smruti Circle, New Ranip, Ahmedabad-382480, Gujarat.';
+  
+  return newAddress;
+}
+
+/**
  * Send a confirmation email for a confirmed appointment.
  * Only sends if confirmationEmailSent is false for that appointment.
  */
@@ -78,8 +89,10 @@ export async function sendConfirmationEmail(
     }
 
     const clinicName = process.env.CLINIC_NAME || 'Bansari Homeopathy Clinic';
-    const clinicPhone = process.env.CLINIC_PHONE || '+91 98765 43210';
-    const clinicAddress = process.env.CLINIC_ADDRESS || 'Ahmedabad, Gujarat';
+    const clinicPhone = process.env.CLINIC_PHONE || '+91 63543 88539';
+    
+    // Get clinic address from database settings API
+    const clinicAddress = await getClinicAddress();
 
     const dateStr = formatDate(appointment.appointment_date);
     const timeStr = formatTime(appointment.appointment_time);
@@ -145,14 +158,43 @@ function formatDate(date: Date): string {
   });
 }
 
-function formatTime(time: Date | null): string {
+/**
+ * Format appointment time for display in emails
+ * Handles MySQL TIME column which can be returned as Date object or string
+ */
+function formatTime(time: Date | string | null): string {
   if (!time) return 'To be confirmed';
-  const d = new Date(time);
-  return d.toLocaleTimeString('en-IN', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  
+  let hours: number;
+  let minutes: number;
+  
+  if (typeof time === 'string') {
+    // Handle string format like "15:00:00" or "15:00"
+    const parts = time.split(':').map(Number);
+    hours = parts[0];
+    minutes = parts[1] || 0;
+  } else if (time instanceof Date) {
+    // Handle Date object from Prisma (MySQL TIME column)
+    // Get the time components directly - MySQL TIME stores as Date with time portion
+    // The Date object is in UTC, so we need to extract hours/minutes in UTC to avoid timezone shift
+    hours = time.getUTCHours();
+    minutes = time.getUTCMinutes();
+  } else {
+    return 'To be confirmed';
+  }
+  
+  // Validate the parsed values
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    console.error('[formatTime] Invalid time values:', { time, hours, minutes });
+    return 'To be confirmed';
+  }
+  
+  // Format in 12-hour format with AM/PM
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, '0');
+  
+  return `${displayHours}:${displayMinutes} ${period}`;
 }
 
 // ─── HTML Template ──────────────────────────────────────────

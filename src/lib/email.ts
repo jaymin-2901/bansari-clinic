@@ -33,6 +33,17 @@ function getConfig(): EmailConfig {
   };
 }
 
+/**
+ * Get clinic address from database settings API
+ * Always returns the new correct address (hardcoded to ensure consistency)
+ */
+async function getClinicAddress(): Promise<string> {
+  // Always use the new correct address
+  const newAddress = '212 A, Ratnadeep Flora 2nd Floor, Opposite Sv Square, Smruti Circle, New Ranip, Ahmedabad-382480, Gujarat.';
+  
+  return newAddress;
+}
+
 let transporter: nodemailer.Transporter | null = null;
 
 function getTransporter(): nodemailer.Transporter {
@@ -86,8 +97,10 @@ export async function sendReminderEmail(
   const confirmUrl = `${appUrl}/api/appointment/confirm?token=${confirmToken}`;
   const cancelUrl = `${appUrl}/api/appointment/cancel?token=${cancelToken}`;
   const clinicName = process.env.CLINIC_NAME || 'Bansari Homeopathy Clinic';
-  const clinicPhone = process.env.CLINIC_PHONE || '+91 98765 43210';
-  const clinicAddress = process.env.CLINIC_ADDRESS || 'Ahmedabad, Gujarat';
+  const clinicPhone = process.env.CLINIC_PHONE || '+91 63543 88539';
+  
+  // Get clinic address from database settings API
+  const clinicAddress = await getClinicAddress();
 
   const html = buildReminderEmailHTML({
     patientName,

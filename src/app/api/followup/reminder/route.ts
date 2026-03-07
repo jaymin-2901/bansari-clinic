@@ -287,12 +287,40 @@ function formatDate(date: Date): string {
   });
 }
 
-function formatTime(time: Date | null): string {
+/**
+ * Format appointment time for display in emails
+ * Handles MySQL TIME column which can be returned as Date object or string
+ */
+function formatTime(time: Date | string | null): string {
   if (!time) return 'To be confirmed';
-  const d = new Date(time);
-  return d.toLocaleTimeString('en-IN', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  
+  let hours: number;
+  let minutes: number;
+  
+  if (typeof time === 'string') {
+    // Handle string format like "15:00:00" or "15:00"
+    const parts = time.split(':').map(Number);
+    hours = parts[0];
+    minutes = parts[1] || 0;
+  } else if (time instanceof Date) {
+    // Handle Date object from Prisma (MySQL TIME column)
+    // Get the time components directly - MySQL TIME stores as Date with time portion
+    // Use UTC hours to avoid timezone shift - MySQL TIME stores time in UTC
+    hours = time.getUTCHours();
+    minutes = time.getUTCMinutes();
+  } else {
+    return 'To be confirmed';
+  }
+  
+  // Validate the parsed values
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    return 'To be confirmed';
+  }
+  
+  // Format in 12-hour format with AM/PM
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  const displayMinutes = minutes.toString().padStart(2, '0');
+  
+  return `${displayHours}:${displayMinutes} ${period}`;
 }

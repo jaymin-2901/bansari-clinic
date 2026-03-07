@@ -1,36 +1,22 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
-import { fetchSettings } from '@/lib/api';
+import { useClinicSettings } from '@/components/ClinicSettingsContext';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { t } = useLanguage();
-  const [settings, setSettings] = useState<Record<string, string>>({});
+  
+  // Get dynamic clinic settings from context
+  const { clinicName, clinicLogo, doctorName, settings } = useClinicSettings();
 
-  useEffect(() => {
-    fetchSettings('contact').then((data) => {
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        // data is already a key-value map from the API
-        setSettings(data as Record<string, string>);
-      } else if (Array.isArray(data)) {
-        const map: Record<string, string> = {};
-        data.forEach((s: { setting_key: string; setting_value: string }) => {
-          map[s.setting_key] = s.setting_value;
-        });
-        setSettings(map);
-      }
-    });
-  }, []);
-
-  const phone = settings.contact_phone || '+91 98765 43210';
-  const email = settings.contact_email || 'info@bansarihomeopathy.com';
-  const address = settings.contact_address || 'Near City Hospital, Main Road, Ahmedabad, Gujarat';
+  const phone = settings.contact_phone || '';
+  const email = settings.contact_email || '';
+  const address = settings.contact_address || '';
   const whatsapp = settings.contact_whatsapp || phone;
   const mapUrl = settings.contact_map_url || '';
-  const clinicHours = settings.contact_hours || '9:30 AM - 1:00 PM, 5:00 PM - 8:00 PM';
+  const clinicHours = settings.contact_hours || '';
 
   return (
     <footer className="bg-charcoal-900 dark:bg-navy text-gray-300 transition-colors duration-500 border-t border-charcoal-800 dark:border-dark-border">
@@ -40,12 +26,20 @@ export default function Footer() {
           {/* ── Clinic Info ── */}
           <div className="sm:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-teal-300 rounded-xl flex items-center justify-center shadow-glow">
-                <span className="text-white font-bold text-lg">B</span>
-              </div>
+              {clinicLogo ? (
+                <img 
+                  src={clinicLogo} 
+                  alt={clinicName}
+                  className="w-10 h-10 rounded-xl object-cover shadow-glow"
+                />
+              ) : (
+                <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-teal-300 rounded-xl flex items-center justify-center shadow-glow">
+                  <span className="text-white font-bold text-lg">B</span>
+                </div>
+              )}
               <div>
-                <h3 className="text-white font-bold font-heading text-lg tracking-tight">Bansari Homeopathy</h3>
-                <p className="text-gray-500 text-xs font-medium">Dr. Bansari Patel</p>
+                <h3 className="text-white font-bold font-heading text-lg tracking-tight">{clinicName}</h3>
+                <p className="text-gray-500 text-xs font-medium">{doctorName}</p>
               </div>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed mb-5 max-w-xs">
@@ -93,9 +87,11 @@ export default function Footer() {
           </div>
 
           {/* ── Contact Info ── */}
+          {(address || phone || email) && (
           <div>
             <h4 className="text-white font-semibold font-heading mb-4 text-sm uppercase tracking-wider">{t('Contact Us', 'સંપર્ક કરો')}</h4>
             <div className="space-y-3.5 text-sm">
+              {address && (
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-charcoal-800 dark:bg-dark-card rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                   <svg className="w-4 h-4 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -109,6 +105,8 @@ export default function Footer() {
                   <span className="text-gray-400 leading-relaxed">{address}</span>
                 )}
               </div>
+              )}
+              {phone && (
               <a href={`tel:${phone}`} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
                 <div className="w-8 h-8 bg-gray-800 dark:bg-dark-card rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary-500/20 transition-colors">
                   <svg className="w-4 h-4 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -117,6 +115,8 @@ export default function Footer() {
                 </div>
                 <span>{phone}</span>
               </a>
+              )}
+              {email && (
               <a href={`mailto:${email}`} className="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
                 <div className="w-8 h-8 bg-gray-800 dark:bg-dark-card rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-primary-500/20 transition-colors">
                   <svg className="w-4 h-4 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -125,8 +125,10 @@ export default function Footer() {
                 </div>
                 <span>{email}</span>
               </a>
+              )}
             </div>
           </div>
+          )}
 
           {/* ── Clinic Hours ── */}
           <div>
@@ -135,7 +137,7 @@ export default function Footer() {
               <div className="bg-gray-800/50 dark:bg-dark-card/50 rounded-xl p-4 space-y-3 border border-gray-800 dark:border-dark-border">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">{t('Mon - Sat', 'સોમ - શનિ')}</span>
-                  <span className="text-teal-300 dark:text-teal-300 font-medium text-xs">{clinicHours}</span>
+                  <span className="text-teal-300 dark:text-teal-300 font-medium text-xs">{clinicHours || '9:00 AM - 1:00 PM, 5:00 PM - 8:00 PM'}</span>
                 </div>
                 <div className="border-t border-gray-700/50 dark:border-dark-border pt-3 flex justify-between items-center">
                   <span className="text-gray-400">{t('Sunday', 'રવિવાર')}</span>
@@ -175,7 +177,7 @@ export default function Footer() {
 
         {/* Bottom Bar */}
         <div className="border-t border-charcoal-800 dark:border-dark-border mt-10 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-gray-500">
-          <p>&copy; {currentYear} Bansari Homeopathy Clinic. {t('All rights reserved.', 'સર્વ હક્ક અનામત.')}</p>
+          <p>&copy; {currentYear} {clinicName}. {t('All rights reserved.', 'સર્વ હક્ક અનામત.')}</p>
           <div className="flex items-center gap-4">
             <Link href="/privacy-policy" className="hover:text-white transition-colors">
               {t('Privacy Policy', 'ગોપનીયતા નીતિ')}
@@ -190,3 +192,4 @@ export default function Footer() {
     </footer>
   );
 }
+

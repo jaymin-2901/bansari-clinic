@@ -17,6 +17,12 @@ const nextConfig = {
         port: '8080',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'http',
+        hostname: '**',
+        port: '',
+        pathname: '/uploads/**',
+      },
     ],
   },
   env: {
@@ -51,3 +57,4 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+

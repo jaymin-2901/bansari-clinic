@@ -1,5 +1,6 @@
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || `${BACKEND_URL}/api/clinic`;
+// Use relative URLs for API calls so they work both locally and from mobile
+// The Next.js rewrites in next.config.js will proxy these to the PHP backend
+export const API_URL = '/api/clinic';
 
 /* ── Settings (CMS key-value) ── */
 export async function fetchSettings(group: string = 'general') {
@@ -107,8 +108,40 @@ export async function fetchMyAppointments(patientId: number) {
 }
 
 /* ── Image URL helper ── */
+// Use relative URLs for static files so they work both locally and from mobile
+// The Next.js rewrites in next.config.js will proxy these to the PHP backend
 export function getImageUrl(path: string | null): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+  
+  // Use relative URL so it works from any device
+  return `${path.startsWith('/') ? '' : '/'}${path}`;
 }
+
+/* ── Clinic Images ── */
+export async function fetchClinicImages() {
+  try {
+    const res = await fetch(`${API_URL}/clinic_images.php`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
+  } catch {
+    return [];
+  }
+}
+
+/* ── Upload Cropped Image ── */
+export async function uploadCroppedImage(imageData: string, prefix: string = 'img') {
+  const res = await fetch(`${API_URL}/crop_image.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image_data: imageData,
+      prefix: prefix,
+    }),
+  });
+  return res.json();
+}
+

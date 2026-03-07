@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import { useRouter } from 'next/navigation';
 import { bookAppointment } from '@/lib/api';
+import { useLanguage } from '@/lib/LanguageContext';
 
 type Step = 1 | 2 | 3 | 4;
 type ConsultationType = 'offline' | 'online' | '';
@@ -36,16 +38,54 @@ interface SlotInfo {
   session: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || `${BACKEND_URL}/api/clinic`;
 
 export default function BookAppointmentPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [consultationType, setConsultationType] = useState<ConsultationType>('');
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [appointmentId, setAppointmentId] = useState<number | null>(null);
   const [loggedInPatientId, setLoggedInPatientId] = useState<number | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check authentication on mount and redirect if not logged in
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('patient');
+      if (raw) {
+        const p = JSON.parse(raw);
+        setLoggedInPatientId(p.id || null);
+        setIsLoggedIn(true);
+        // Pre-fill form with patient data
+        setBasic((prev) => ({
+          ...prev,
+          full_name: p.name || prev.full_name,
+          mobile: p.mobile || prev.mobile,
+          age: p.age ? String(p.age) : prev.age,
+          gender: p.gender || prev.gender,
+          city: p.city || prev.city,
+        }));
+      } else {
+        // Not logged in - redirect to login with return URL
+        router.push(`/login?returnUrl=${encodeURIComponent('/book-appointment')}`);
+        return;
+      }
+    } catch {
+      router.push(`/login?returnUrl=${encodeURIComponent('/book-appointment')}`);
+      return;
+    }
+
+    // Fetch closed days for date picker
+    fetch(`${API_URL}/slots.php?action=closed_days`)
+      .then(r => r.json())
+      .then(d => { if (d.success) setClosedDays(d.closed_days); })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [router]);
 
   // Slot system state
   const [detectedPatientType, setDetectedPatientType] = useState<'new' | 'old'>('new');
@@ -345,7 +385,7 @@ export default function BookAppointmentPage() {
                         className="input-field"
                         value={basic.mobile}
                         onChange={(e) => setBasic({ ...basic, mobile: e.target.value })}
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 63543 88539"
                         required
                       />
                     </div>

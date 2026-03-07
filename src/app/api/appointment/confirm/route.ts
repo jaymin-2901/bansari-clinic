@@ -108,7 +108,7 @@ function renderResponse(title: string, message: string, type: 'success' | 'error
   };
   const c = colors[type];
   const clinicName = process.env.CLINIC_NAME || 'Bansari Homeopathy Clinic';
-  const clinicPhone = process.env.CLINIC_PHONE || '+91 98765 43210';
+  const clinicPhone = process.env.CLINIC_PHONE || '+91 63543 88539';
 
   const html = `<!DOCTYPE html>
 <html lang="en">

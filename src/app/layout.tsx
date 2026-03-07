@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
+import { ClinicSettingsProvider } from '@/components/ClinicSettingsContext';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -41,9 +42,11 @@ export default function RootLayout({
       </head>
       <body className={`${openSans.className} antialiased bg-white dark:bg-dark-bg text-gray-900 dark:text-gray-200 transition-colors duration-500`}>
         <Providers>
-          <Navbar />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
+          <ClinicSettingsProvider>
+            <Navbar />
+            <main className="min-h-screen">{children}</main>
+            <Footer />
+          </ClinicSettingsProvider>
         </Providers>
       </body>
     </html>

@@ -1,17 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BACKEND_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api';
 
 export default function TermsConditionsPage() {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     async function fetchPage() {
       try {
         const res = await fetch(
-          `${BACKEND_URL}/api/clinic/legal_page.php?slug=terms-conditions`,
+          `${API_URL}/legal_page.php?slug=terms-conditions`,
           { cache: 'no-store' }
         );
         if (res.ok) {
@@ -19,9 +20,12 @@ export default function TermsConditionsPage() {
           if (json.success && json.data?.content) {
             setContent(json.data.content);
           }
+        } else {
+          setError('Failed to load terms and conditions');
         }
-      } catch {
-        // Fallback handled below
+      } catch (err) {
+        setError('Error loading terms and conditions');
+        console.error('Terms and conditions fetch error:', err);
       } finally {
         setLoading(false);
       }

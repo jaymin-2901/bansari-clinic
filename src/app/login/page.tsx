@@ -1,9 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/LanguageContext';
 import { loginPatient } from '@/lib/api';
+import { useClinicSettings } from '@/components/ClinicSettingsContext';
+import { useAuth } from '@/components/AuthContext';
 
 /* ── Eye icon SVGs ── */
 function EyeIcon() {
@@ -29,6 +32,14 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { t } = useLanguage();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  // Get dynamic clinic settings
+  const { clinicName, clinicLogo } = useClinicSettings();
+
+  // Get return URL from query params
+  const returnUrl = searchParams.get('returnUrl') || '/book-appointment';
 
   const isEmail = identifier.includes('@');
 
@@ -68,7 +79,8 @@ export default function LoginPage() {
         setError(data.message || 'Login failed. Please try again.');
       } else {
         localStorage.setItem('patient', JSON.stringify(data.patient));
-        window.location.href = '/book-appointment';
+        // Redirect to returnUrl or default to book-appointment
+        window.location.href = returnUrl;
       }
     } catch {
       setError('Network error. Please check your connection.');
@@ -81,9 +93,17 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg py-12 px-4">
       <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg dark:shadow-2xl dark:border dark:border-dark-border p-8 max-w-md w-full">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
-            <span className="text-white font-bold text-xl">B</span>
-          </div>
+          {clinicLogo ? (
+            <img 
+              src={clinicLogo} 
+              alt={clinicName}
+              className="w-12 h-12 rounded-full object-cover mx-auto mb-3 shadow-glow"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-white font-bold text-xl">B</span>
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-200">{t('Welcome Back', 'પાછા આવો')}</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">{t('Login to your patient account', 'તમારા દર્દી ખાતામાં લોગિન કરો')}</p>
         </div>
