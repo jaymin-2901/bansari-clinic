@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/LanguageContext';
 import { loginPatient } from '@/lib/api';
 import { useClinicSettings } from '@/components/ClinicSettingsContext';
-import { useAuth } from '@/components/AuthContext';
 
 /* ── Eye icon SVGs ── */
 function EyeIcon() {
@@ -25,7 +24,8 @@ function EyeOffIcon() {
   );
 }
 
-export default function LoginPage() {
+/* ── Login Form Component that uses useSearchParams ── */
+function LoginForm() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -170,3 +170,46 @@ export default function LoginPage() {
     </div>
   );
 }
+
+/* ── Loading fallback ── */
+function LoginFormFallback() {
+  const { clinicName, clinicLogo } = useClinicSettings();
+  const { t } = useLanguage();
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg py-12 px-4">
+      <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg dark:shadow-2xl dark:border dark:border-dark-border p-8 max-w-md w-full">
+        <div className="text-center mb-6">
+          {clinicLogo ? (
+            <img 
+              src={clinicLogo} 
+              alt={clinicName}
+              className="w-12 h-12 rounded-full object-cover mx-auto mb-3 shadow-glow"
+            />
+          ) : (
+            <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-white font-bold text-xl">B</span>
+            </div>
+          )}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-200">{t('Welcome Back', 'પાછા આવો')}</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">{t('Login to your patient account', 'તમારા દર્દી ખાતામાં લોગિન કરો')}</p>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          <div className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Page Component with Suspense Boundary ── */
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFormFallback />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+

@@ -25,9 +25,7 @@ export const offlineFormSchema = z.object({
   currentMedicines: z.string().optional().default(''),
   hasAllergy: z.boolean(),
   allergyDetails: z.string().optional().default(''),
-  clinicConfirmation: z.literal(true, {
-    errorMap: () => ({ message: 'Please confirm to proceed' }),
-  }),
+  clinicConfirmation: z.literal(true, 'Please confirm to proceed'),
 });
 
 export type OfflineFormSchema = z.infer<typeof offlineFormSchema>;
@@ -110,9 +108,7 @@ export const mentalProfileSchema = z.object({
 
 export const declarationSchema = z.object({
   signature: z.string().min(1, 'Digital signature is required'),
-  truthConfirmation: z.literal(true, {
-    errorMap: () => ({ message: 'You must confirm this is true' }),
-  }),
+  truthConfirmation: z.literal(true, 'You must confirm this is true'),
 });
 
 // ─── Full Online Intake ───────────────────────────────
