@@ -1,0 +1,61 @@
+# ============================================================
+# MediConnect – Apache Security Configuration
+# File: backend/security/.htaccess
+# ============================================================
+# Place this file in your web root or backend/ directory.
+# This provides an additional layer of defense at the web server level.
+# ============================================================
+
+# ─── Security Headers (Apache level) ───
+<IfModule mod_headers.c>
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Prevent clickjacking
+    Header always set X-Frame-Options "DENY"
+    
+    # Referrer policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Disable legacy XSS filter
+    Header always set X-XSS-Protection "0"
+    
+    # Restrict browser features
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    
+    # HSTS (uncomment in production with HTTPS)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
+    # Remove server signature
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
+
+# ─── Ensure Authorization header is passed to PHP ───
+# Required for JWT Bearer token extraction under Apache + mod_php/CGI
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+</IfModule>
+
+# ─── Deny access to sensitive files ───
+<FilesMatch "\.(env|log|sql|md|txt|bak|old|orig|swp)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ─── Deny access to security directory internals ───
+<FilesMatch "^(RateLimiter|JWTHandler|AuthMiddleware|CORSHandler|SecurityHeaders|AuditLogger|bootstrap)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# ─── Disable directory listing ───
+Options -Indexes

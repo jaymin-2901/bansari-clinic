@@ -1,0 +1,13 @@
+[2026-02-26 12:40:45] FAILED: Consultation #16 | Error: HTTP 401: Got unexpected null
+[2026-02-26 17:58:55] FAILED: Consultation #17 | Error: HTTP 401: Got unexpected null
+[2026-02-26 18:39:17] FAILED: Consultation #18 | Error: HTTP 401: Got unexpected null
+[2026-02-26 18:43:08] FAILED: Consultation #19 | Error: HTTP 401: Got unexpected null
+[2026-02-26 19:11:18] FAILED: Consultation #20 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:18:54] FAILED: Consultation #21 | Error: HTTP 401: Got unexpected null
+[2026-02-26 21:39:05] RESEND: Reset booking WA for Consultation #21
+[2026-02-26 21:39:06] FAILED: Consultation #21 | Error: HTTP 401: Got unexpected null
+[2026-02-27 15:49:54] FAILED: Consultation #22 | Error: HTTP 401: Got unexpected null
+[2026-02-27 16:02:36] FAILED: Consultation #23 | Error: HTTP 401: Got unexpected null
+[2026-02-27 20:16:12] FAILED: Consultation #24 | Error: HTTP 401: Got unexpected null
+[2026-02-27 20:18:07] FAILED: Consultation #25 | Error: HTTP 401: Got unexpected null
+[2026-02-27 23:13:34] FAILED: Consultation #26 | Error: HTTP 401: Got unexpected null

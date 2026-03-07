@@ -1,0 +1,25 @@
+<?php
+/**
+ * Environment Variable Loader
+ * Loads environment variables and provides fallback values
+ */
+
+// Load clinic config to get FRONTEND_URL and other settings
+if (file_exists(__DIR__ . '/clinic_config.php')) {
+    require_once __DIR__ . '/clinic_config.php';
+}
+
+// Load main config for database settings
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
+
+// Function to get environment variable with fallback support
+function getEnvVar(string $key, $default = false) {
+    $value = getenv($key);
+    if ($value === false) {
+        $value = $_ENV[$key] ?? $default;
+    }
+    return $value;
+}
+

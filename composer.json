@@ -1,0 +1,20 @@
+{
+    "name": "mediconnect/mediconnect",
+    "description": "MediConnect Admin System",
+    "type": "project",
+    "authors": [
+        {
+            "name": "JAYMIN AJAYBHAI CHAVDA",
+            "email": "230170146009@vgecg.ac.in"
+        }
+    ],
+    "require": {
+        "phpoffice/phpspreadsheet": "1.29",
+        "phpmailer/phpmailer": "^7.0"
+    },
+    "config": {
+        "audit": {
+            "block-insecure": false
+        }
+    }
+}

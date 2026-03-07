@@ -1,0 +1,56 @@
+[2026-02-26 20:19:35] ─── CRON START: 24h Reminder Check ───
+[2026-02-26 20:19:35] Found 7 appointment(s) due for 24h reminder
+[2026-02-26 20:19:35]   SENDING #19: JAYMIN CHAVDA (7045221515) | Appt: Friday, 27 Feb 2026 at 01:00 AM
+[2026-02-26 20:19:43]     ❌ FAILED #19 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:19:43]   SENDING #4: Neha Desai (+919876543213) | Appt: Friday, 27 Feb 2026 at 09:30 AM
+[2026-02-26 20:19:46]     ❌ FAILED #4 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:19:46]   SENDING #5: Vikram Singh (+919876543214) | Appt: Friday, 27 Feb 2026 at 10:00 AM
+[2026-02-26 20:19:47]     ❌ FAILED #5 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:19:47]   SENDING #16: Test Patient (+919999888877) | Appt: Friday, 27 Feb 2026 at 10:00 AM
+[2026-02-26 20:19:49]     ❌ FAILED #16 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:19:49]   SENDING #6: Anjali Joshi (+919876543215) | Appt: Friday, 27 Feb 2026 at 11:30 AM
+[2026-02-26 20:19:52]     ❌ FAILED #6 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:19:53]   SENDING #18: fogowroinon (9974157344) | Appt: Friday, 27 Feb 2026 at 12:00 PM
+[2026-02-26 20:19:59]     ❌ FAILED #18 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:19:59]   SENDING #20: JAYMIN CHAVDA (7045221515) | Appt: Friday, 27 Feb 2026 at 12:30 PM
+[2026-02-26 20:20:04]     ❌ FAILED #20 | Error: HTTP 401: Got unexpected null
+[2026-02-26 20:20:04] SUMMARY: Total=7 | Sent=0 | Failed=7 | Skipped=0
+[2026-02-26 20:20:04] ─── CRON END ───
+[2026-03-01 13:51:15] [SAMEDAY] ─── CRON START: Same-Day Reminder Check ───
+[2026-03-01 13:51:15] [SAMEDAY] Date: 2026-03-01 | Found 3 appointment(s) needing same-day reminder
+[2026-03-01 13:51:15] [SAMEDAY]   SENDING #13: Rahul Sharma (+919876543210) | Time: 10:00 AM
+[2026-03-01 13:51:15] [SAMEDAY]     → Template 'appointment_reminder' used | Success: NO
+[2026-03-01 13:51:15] [SAMEDAY]     ⚠ Template failed: HTTP 401: Got unexpected null | Raw: {"error":{"message":"Got unexpected null","type":"OAuthException","code":190,"fbtrace_id":"A0jtbixxSjhc0TfsxhPiBcf"}}
+[2026-03-01 13:51:15] [SAMEDAY]     ❌ FAILED #13 | Error: HTTP 401: Got unexpected null
+[2026-03-01 13:51:16] [SAMEDAY]   SENDING #23: JAYMIN CHAVDA (7045221515) | Time: 12:00 PM
+[2026-03-01 13:51:17] [SAMEDAY]     → Template 'appointment_reminder' used | Success: NO
+[2026-03-01 13:51:17] [SAMEDAY]     ⚠ Template failed: HTTP 401: Got unexpected null | Raw: {"error":{"message":"Got unexpected null","type":"OAuthException","code":190,"fbtrace_id":"AcgviLnrpoHV1_tmFzxrQOc"}}
+[2026-03-01 13:51:17] [SAMEDAY]     ❌ FAILED #23 | Error: HTTP 401: Got unexpected null
+[2026-03-01 13:51:17] [SAMEDAY]   SENDING #24: bansari patel (9227504540) | Time: 12:00 PM
+[2026-03-01 13:51:18] [SAMEDAY]     → Template 'appointment_reminder' used | Success: NO
+[2026-03-01 13:51:18] [SAMEDAY]     ⚠ Template failed: HTTP 401: Got unexpected null | Raw: {"error":{"message":"Got unexpected null","type":"OAuthException","code":190,"fbtrace_id":"AJCJqsCqUlZgkOLAHaChipa"}}
+[2026-03-01 13:51:18] [SAMEDAY]     ❌ FAILED #24 | Error: HTTP 401: Got unexpected null
+[2026-03-01 13:51:18] [SAMEDAY] SUMMARY: Total=3 | Sent=0 | Failed=3 | Skipped=0
+[2026-03-01 13:51:18] [SAMEDAY] ─── CRON END ───
+[2026-03-01 14:49:39] [SAMEDAY] ─── CRON START: Same-Day Reminder Check ───
+[2026-03-01 14:49:39] [SAMEDAY] Date: 2026-03-01 | Found 3 appointment(s) needing same-day reminder
+[2026-03-01 14:49:39] [SAMEDAY]   SENDING #13: Rahul Sharma (+919876543210) | Time: 10:00 AM
+[2026-03-01 14:49:40] [SAMEDAY]     ⚠ Template 'appointment_reminder' failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:41] [SAMEDAY]     ⚠ hello_world template also failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:42] [SAMEDAY]     ⚠ Plain text also failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:42] [SAMEDAY]     → Method: text | Success: NO
+[2026-03-01 14:49:42] [SAMEDAY]     ❌ FAILED #13 | Error: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:42] [SAMEDAY]   SENDING #23: JAYMIN CHAVDA (7045221515) | Time: 12:00 PM
+[2026-03-01 14:49:43] [SAMEDAY]     ⚠ Template 'appointment_reminder' failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:44] [SAMEDAY]     ⚠ hello_world template also failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:45] [SAMEDAY]     ⚠ Plain text also failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:45] [SAMEDAY]     → Method: text | Success: NO
+[2026-03-01 14:49:45] [SAMEDAY]     ❌ FAILED #23 | Error: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:45] [SAMEDAY]   SENDING #24: bansari patel (9227504540) | Time: 12:00 PM
+[2026-03-01 14:49:46] [SAMEDAY]     ⚠ Template 'appointment_reminder' failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:47] [SAMEDAY]     ⚠ hello_world template also failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:48] [SAMEDAY]     ⚠ Plain text also failed: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:48] [SAMEDAY]     → Method: text | Success: NO
+[2026-03-01 14:49:48] [SAMEDAY]     ❌ FAILED #24 | Error: HTTP 400: (#131030) Recipient phone number not in allowed list — Recipient phone number not in allowed list: Add recipient phone number to recipient list and try again.
+[2026-03-01 14:49:48] [SAMEDAY] SUMMARY: Total=3 | Sent=0 | Failed=3 | Skipped=0
+[2026-03-01 14:49:48] [SAMEDAY] ─── CRON END ───

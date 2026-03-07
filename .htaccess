@@ -1,0 +1,57 @@
+# ============================================================
+# Bansari Homeopathy – Root Apache Security Configuration
+# ============================================================
+
+# ─── 1. HTTPS Enforcement ───
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Force HTTPS (uncomment in production)
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+    
+    # Block direct access to sensitive files
+    RewriteRule ^\.env$ - [F,L]
+    RewriteRule ^composer\.(json|lock)$ - [F,L]
+    RewriteRule ^\.git - [F,L]
+</IfModule>
+
+# ─── 2. Security Headers ───
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-XSS-Protection "0"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    Header always unset X-Powered-By
+    
+    # HSTS – Uncomment in production with valid SSL
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
+
+# ─── 3. Block Sensitive File Access ───
+<FilesMatch "\.(env|sql|log|bak|ini|conf|sh|yml|yaml|toml|lock)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ─── 4. Disable Directory Listing ───
+Options -Indexes
+
+# ─── 5. Block Access to Hidden Files ───
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+</FilesMatch>
+
+# ─── 6. Prevent PHP Execution in Upload Directories ───
+<IfModule mod_rewrite.c>
+    RewriteRule ^uploads/.*\.php$ - [F,L]
+    RewriteRule ^backups/.*$ - [F,L]
+</IfModule>

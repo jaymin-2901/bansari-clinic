@@ -1,0 +1,32 @@
+[2026-02-26 12:00:21] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:25] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:29] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:33] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:37] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:41] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:46] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:50] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:00:54] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:01:27] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:01:41] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:01:45] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:01:49] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:08:54] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:19:29] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:19:33] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:19:37] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:19:41] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 12:20:03] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-26 21:00:37] Bulk Action Error: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mediconnect.patients' doesn't exist
+[2026-02-27 18:17:00] Follow-Up API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:17:06] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:17:15] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:17:58] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:18:03] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:19:24] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:19:31] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:19:35] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:19:39] Admin Reminders API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:19:43] Analytics API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:20:26] Frontend Booking API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[2026-02-27 18:49:56] Frontend Booking API Error: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it

@@ -1,0 +1,39 @@
+[2026-02-26 21:01:42] BULK followup_pending: IDs=21 affected=0
+[2026-02-26 21:02:05] BULK followup_pending: IDs=21 affected=0
+[2026-02-26 21:02:58] BULK followup_done: IDs=21 affected=1 by admin=0
+[2026-02-26 21:03:40] BULK followup_pending: IDs=15,14 affected=0
+[2026-02-26 21:03:50] BULK followup_pending: IDs=15 affected=0
+[2026-02-26 21:04:26] BULK patient_deactivate: IDs=12 affected=1 by admin=0
+[2026-02-26 21:04:39] BULK patient_deactivate: IDs=1,12,11,10,21,20,24,23,15,14,22,13,18,17,16,19 affected=14 by admin=0
+[2026-02-26 21:05:50] BULK patient_deactivate: IDs=1 affected=0 by admin=0
+[2026-02-26 21:10:17] BULK patient_activate: IDs=1,12,11,10,21,20,24,23,15,14,22,13,18,17,16,19 affected=15 by admin=0
+[2026-02-26 21:10:42] BULK patient_deactivate: IDs=1 affected=0 by admin=0
+[2026-02-26 21:11:05] BULK patient_delete: IDs=1 affected=0 by admin=0
+[2026-02-26 21:13:02] BULK patient_deactivate: IDs=3 affected=0 by admin=1
+[2026-02-26 21:13:24] BULK patient_deactivate: IDs=10,11 affected=2 by admin=1
+[2026-02-26 21:14:20] BULK patient_activate: IDs=10,11 affected=2 by admin=1
+[2026-02-26 21:14:46] BULK patient_activate: IDs=1 affected=0 by admin=0
+[2026-02-26 21:14:54] BULK patient_deactivate: IDs=1 affected=0 by admin=0
+[2026-02-26 21:15:08] BULK patient_delete: IDs=1 affected=0 by admin=0
+[2026-02-26 21:16:54] BULK patient_deactivate: IDs=10,11 affected=2 by admin=1
+[2026-02-26 21:18:37] BULK patient_activate: IDs=10,11 affected=2 by admin=1
+[2026-02-26 21:22:28] BULK patient_deactivate: IDs=10 affected=1 by admin=1
+[2026-02-26 21:22:31] BULK patient_activate: IDs=10 affected=1 by admin=1
+[2026-02-26 21:37:55] BULK patient_deactivate: IDs=1 affected=0 by admin=0
+[2026-02-26 21:38:41] BULK followup_done: IDs=21 affected=0 by admin=0
+[2026-02-26 21:38:52] BULK mark_confirmed: IDs=21 affected=0
+[2026-02-26 21:39:06] BULK resend_whatsapp: IDs=21 sent=0 errors=1
+[2026-02-26 21:42:56] BULK delete: IDs=21 affected=1 by admin=0
+[2026-02-26 21:44:08] BULK patient_deactivate: IDs=12 affected=1 by admin=0
+[2026-02-26 21:44:17] BULK patient_activate: IDs=12 affected=1 by admin=0
+[2026-02-26 21:44:27] BULK patient_deactivate: IDs=12 affected=1 by admin=0
+[2026-02-26 21:44:39] BULK patient_deactivate: IDs=11,10 affected=2 by admin=0
+[2026-02-26 21:44:50] BULK patient_activate: IDs=12,11,10,21,20,24,23,15,22,14,13,18,17,16,19 affected=3 by admin=0
+[2026-02-26 21:45:04] BULK patient_delete: IDs=11 affected=1 by admin=0
+[2026-02-26 21:45:41] BULK followup_done: IDs=15,13 affected=2 by admin=0
+[2026-02-26 22:21:50] BULK patient_deactivate: IDs=12 affected=1 by admin=0
+[2026-02-26 22:22:02] BULK patient_activate: IDs=12 affected=1 by admin=0
+[2026-02-26 22:22:35] BULK followup_done: IDs=15 affected=0 by admin=0
+[2026-02-26 22:22:45] BULK followup_pending: IDs=15 affected=1
+[2026-02-26 22:24:30] BULK followup_pending: IDs=11 affected=0
+[2026-02-27 20:34:10] BULK patient_deactivate: IDs=28,24 affected=2 by admin=1

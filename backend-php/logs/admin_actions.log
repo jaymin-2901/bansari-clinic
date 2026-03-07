@@ -1,0 +1,50 @@
+[2026-02-26 20:43:32] STATUS CHANGE booking #1 → pending
+[2026-02-26 20:44:02] STATUS CHANGE booking #1 → approved
+[2026-02-26 20:46:57] UPDATE booking #21: {"id":21,"status":"pending","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 20:47:05] UPDATE booking #21: {"id":21,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 20:47:09] STATUS CHANGE booking #21 → completed
+[2026-02-26 20:47:12] STATUS CHANGE booking #21 → cancelled
+[2026-02-26 20:47:15] STATUS CHANGE booking #21 → rejected
+[2026-02-26 20:47:18] STATUS CHANGE booking #21 → pending
+[2026-02-26 20:47:24] UPDATE booking #21: {"id":21,"status":"pending","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 20:47:57] STATUS CHANGE booking #10 → rejected
+[2026-02-26 20:48:18] UPDATE patient #24: {"id":24,"first_name":"JAYMIN","last_name":"CHAVDA","email":"vansh1@gmail.com","phone":"7045221515"}
+[2026-02-26 20:48:34] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-26 20:49:20] STATUS CHANGE booking #9 → cancelled
+[2026-02-26 20:49:26] STATUS CHANGE booking #9 → rejected
+[2026-02-26 20:49:38] STATUS CHANGE booking #21 → approved
+[2026-02-26 20:50:12] UPDATE booking #21: {"id":21,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 20:50:22] UPDATE booking #21: {"id":21,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 20:51:58] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-26 20:52:05] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-26 21:01:55] UPDATE booking #21: {"id":21,"status":"completed","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 21:02:28] UPDATE booking #21: {"id":21,"status":"completed","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 21:02:32] STATUS CHANGE booking #21 → cancelled
+[2026-02-26 21:02:38] STATUS CHANGE booking #21 → rejected
+[2026-02-26 21:02:42] STATUS CHANGE booking #21 → pending
+[2026-02-26 21:03:11] UPDATE booking #21: {"id":21,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 21:38:22] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-26 21:39:13] UPDATE booking #21: {"id":21,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 21:39:34] UPDATE booking #21: {"id":21,"status":"pending","consultation_type":"online","appointment_datetime":"2026-03-15T10:00","preferred_date":"2026-03-15","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-26 21:39:45] STATUS CHANGE booking #21 → approved
+[2026-02-26 21:39:59] UPDATE booking #19: {"id":19,"status":"approved","consultation_type":"offline","appointment_datetime":"2026-02-27T01:00","preferred_date":"2026-02-27","preferred_time":"01:00:00","admin_notes":""}
+[2026-02-26 21:45:46] STATUS CHANGE booking #13 → approved
+[2026-02-26 21:45:52] UPDATE booking #15: {"id":15,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-02T11:00","preferred_date":"2026-03-02","preferred_time":"11:00:00","admin_notes":""}
+[2026-02-26 21:47:37] UPDATE booking #15: {"id":15,"status":"approved","consultation_type":"online","appointment_datetime":"2026-03-02T11:00","preferred_date":"2026-03-02","preferred_time":"11:00:00","admin_notes":""}
+[2026-02-26 21:48:00] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-26 22:21:39] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-26 22:24:08] UPDATE booking #11: {"id":11,"status":"approved","consultation_type":"offline","appointment_datetime":"2026-02-28T10:00","preferred_date":"2026-02-28","preferred_time":"10:00:00","admin_notes":""}
+[2026-02-27 15:51:28] STATUS CHANGE booking #22 → approved
+[2026-02-27 15:52:36] UPDATE booking #22: {"id":22,"status":"cancelled","consultation_type":"offline","appointment_datetime":"2026-02-28T12:30","preferred_date":"2026-02-28","preferred_time":"12:30:00","admin_notes":""}
+[2026-02-27 15:54:38] UPDATE booking #22: {"id":22,"status":"approved","consultation_type":"offline","appointment_datetime":"2026-02-28T12:30","preferred_date":"2026-02-28","preferred_time":"12:30:00","admin_notes":""}
+[2026-02-27 20:15:31] UPDATE patient #12: {"id":12,"first_name":"Amit","last_name":"Patel","email":"amit@gmail.com","phone":"+919876543212"}
+[2026-02-27 20:18:42] UPDATE booking #24: {"id":24,"status":"pending","consultation_type":"offline","appointment_datetime":"2026-03-01T12:00","preferred_date":"2026-03-01","preferred_time":"12:00:00","admin_notes":""}
+[2026-02-27 20:20:01] UPDATE patient #23: {"id":23,"first_name":"fogowroinon","last_name":"","email":"230170146009@vgecg.ac.in","phone":"9974157344"}
+[2026-02-27 20:21:29] UPDATE booking #24: {"id":24,"status":"pending","consultation_type":"offline","appointment_datetime":"2026-03-01T12:00","preferred_date":"2026-03-01","preferred_time":"12:00:00","admin_notes":""}
+[2026-02-27 20:33:02] TOGGLE patient #28 => blocked
+[2026-02-27 20:33:05] TOGGLE patient #28 => active
+[2026-02-27 20:34:15] TOGGLE patient #28 => active
+[2026-02-27 20:34:17] TOGGLE patient #24 => active
+[2026-02-27 23:16:54] STATUS CHANGE booking #26 → approved
+[2026-03-01 20:42:08] TOGGLE patient #28 => blocked
+[2026-03-01 20:42:16] TOGGLE patient #28 => active
