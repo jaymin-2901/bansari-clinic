@@ -44,7 +44,12 @@ export default function AdminLoginPage() {
 
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/login', {
+      // Use direct browser-to-backend call to bypass Vercel server-to-server proxy
+      const backendUrl = (typeof window !== 'undefined' ? 
+        (window as any).env?.NEXT_PUBLIC_BACKEND_URL : null) || 
+        'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+      
+      const res = await fetch(`${backendUrl}/api/clinic/admin_login.php`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password }),
