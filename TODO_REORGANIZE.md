@@ -32,10 +32,10 @@
 - [x] 7.1 Create comprehensive README.md
 
 ### Step 8: Git initialization and push
-- [ ] 8.1 Run git init
-- [ ] 8.2 Run git add .
-- [ ] 8.3 Run git commit
-- [ ] 8.4 Run git branch -M main
-- [ ] 8.5 Run git remote add origin
-- [ ] 8.6 Run git push -u origin main
+- [x] 8.1 Run git init
+- [x] 8.2 Run git add .
+- [x] 8.3 Run git commit
+- [x] 8.4 Run git branch -M main
+- [x] 8.5 Run git remote add origin
+- [x] 8.6 Run git push -u origin main (in progress)
 
