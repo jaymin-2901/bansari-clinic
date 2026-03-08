@@ -25,7 +25,7 @@ $extraScripts = $extraScripts ?? '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/clinic-admin-php/css/style.css">
+    <link rel="stylesheet" href="css/style.css">
     <script>
         window.ADMIN_API_KEY = '<?= getenv("ADMIN_API_KEY") ?: "your-admin-api-key-here" ?>';
         window.ADMIN_ID = '<?= getAdminId() ?>';
