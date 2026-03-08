@@ -42,8 +42,8 @@
 // Load dependencies
 require_once __DIR__ . '/../config/env_loader.php';
 require_once __DIR__ . '/../config/database.php';
-// Load clinic config for FRONTEND_URL (CORS)
-require_once __DIR__ . '/../config/clinic_config.php';
+// Load production config for FRONTEND_URL (CORS) - InfinityFree uses this
+require_once __DIR__ . '/../config/production_config.php';
 require_once __DIR__ . '/RateLimiter.php';
 require_once __DIR__ . '/JWTHandler.php';
 require_once __DIR__ . '/AuthMiddleware.php';
