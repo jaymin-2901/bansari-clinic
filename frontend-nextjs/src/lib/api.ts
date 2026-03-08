@@ -1,15 +1,35 @@
+// Default backend URL - must match the actual InfinityFree domain
+const DEFAULT_BACKEND_URL = 'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+
 // Use NEXT_PUBLIC_BACKEND_URL for direct browser-to-backend calls
 // This bypasses Vercel's server-to-server proxy which fails with InfinityFree's SSL
 export function getBackendUrl(): string {
+  // Check for environment variable at runtime
   if (typeof window !== 'undefined') {
-    return (window as any).env?.NEXT_PUBLIC_BACKEND_URL || 
-           process.env.NEXT_PUBLIC_BACKEND_URL || 
-           'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+    // Try to get from window.env first (set by Vercel)
+    const envBackendUrl = (window as any).env?.NEXT_PUBLIC_BACKEND_URL;
+    if (envBackendUrl) return envBackendUrl;
+    
+    // Try process.env.NEXT_PUBLIC_BACKEND_URL
+    if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
+    
+    // Fallback to default
+    return DEFAULT_BACKEND_URL;
   }
-  return process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+  
+  // Server-side (for SSR)
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
+  return DEFAULT_BACKEND_URL;
 }
 
 export const API_URL = getBackendUrl() + '/api/clinic';
+
+// Debug function to log URL issues
+export function logApiError(context: string, error: unknown) {
+  console.error(`[API Error] ${context}:`, error);
+  console.error(`[API Error] Backend URL being used: ${API_URL}`);
+  console.error(`[API Error] NEXT_PUBLIC_BACKEND_URL env: ${process.env.NEXT_PUBLIC_BACKEND_URL}`);
+}
 
 /* ── Settings (CMS key-value) ── */
 export async function fetchSettings(group: string = 'general') {
@@ -88,12 +108,38 @@ export async function fetchAvailableSlots(date: string, patientId?: number) {
 
 /* ── Patient Auth ── */
 export async function loginPatient(data: { mobile?: string; email?: string; password: string }) {
-  const res = await fetch(`${API_URL}/login.php`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  return res.json();
+  const url = `${API_URL}/login.php`;
+  console.log('[Login] Attempting login to:', url);
+  console.log('[Login] Backend URL:', getBackendUrl());
+  
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+      // Include credentials for session cookies
+      credentials: 'include',
+    });
+    
+    console.log('[Login] Response status:', res.status);
+    console.log('[Login] Response ok:', res.ok);
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('[Login] Error response:', errorText);
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+    
+    const json = await res.json();
+    console.log('[Login] Success:', json.success);
+    return json;
+  } catch (error) {
+    console.error('[Login] Network error:', error);
+    logApiError('loginPatient', error);
+    throw error;
+  }
 }
 
 export async function signupPatient(data: Record<string, any>) {

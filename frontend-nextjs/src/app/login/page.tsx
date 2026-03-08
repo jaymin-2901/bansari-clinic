@@ -82,8 +82,11 @@ function LoginForm() {
         // Redirect to returnUrl or default to book-appointment
         window.location.href = returnUrl;
       }
-    } catch {
-      setError('Network error. Please check your connection.');
+    } catch (err) {
+      // Show more detailed error for debugging
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Login error:', err);
+      setError(`Network error: ${errorMessage}. Please check your connection or try again later.`);
     } finally {
       setLoading(false);
     }
