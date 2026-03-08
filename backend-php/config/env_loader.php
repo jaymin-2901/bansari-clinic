@@ -4,8 +4,11 @@
  * Loads environment variables and provides fallback values
  */
 
-// Load clinic config to get FRONTEND_URL and other settings
-if (file_exists(__DIR__ . '/clinic_config.php')) {
+// Load production config for production deployments (database, CORS, etc.)
+if (file_exists(__DIR__ . '/production_config.php')) {
+    require_once __DIR__ . '/production_config.php';
+} elseif (file_exists(__DIR__ . '/clinic_config.php')) {
+    // Fallback to clinic_config for development
     require_once __DIR__ . '/clinic_config.php';
 }
 

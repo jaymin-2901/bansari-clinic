@@ -3,7 +3,7 @@
  * Bansari Homeopathy Clinic – Database Connection (PDO)
  */
 
-require_once __DIR__ . '/clinic_config.php';
+require_once __DIR__ . '/production_config.php';
 
 function getClinicDB(): PDO
 {
@@ -67,8 +67,8 @@ function setCORSHeaders(): void
             require_once __DIR__ . '/env_loader.php';
         }
         // Load clinic_config to ensure FRONTEND_URL is defined
-        if (file_exists(__DIR__ . '/clinic_config.php')) {
-            require_once __DIR__ . '/clinic_config.php';
+        if (file_exists(__DIR__ . '/production_config.php')) {
+            require_once __DIR__ . '/production_config.php';
         }
         require_once $bootstrapPath;
         require_once $headersPath;
