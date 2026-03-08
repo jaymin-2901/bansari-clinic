@@ -1,0 +1,49 @@
+# ============================================
+# Render.com Deployment Configuration
+# ============================================
+# This file configures automatic deployment from GitHub
+# Docs: https://render.com/docs/yaml
+
+services:
+  # PHP Backend Web Service
+  - type: web
+    name: bansari-backend
+    env: php
+    buildCommand: |
+      # Install Composer dependencies
+      composer install --no-dev --optimize-autoloader
+    startCommand: php -S 0.0.0.0:$PORT router.php
+    plan: free
+    
+    # Environment variables (add your actual values in Render dashboard)
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DB_HOST
+        value: your-mysql-host
+      - key: DB_PORT
+        value: 3306
+      - key: DB_NAME
+        value: your_database_name
+      - key: DB_USER
+        value: your_database_user
+      - key: DB_PASS
+        value: your_database_password
+        sync: false
+      - key: FRONTEND_URL
+        value: https://your-vercel-app.vercel.app
+      - key: JWT_SECRET
+        value: your-jwt-secret-key
+        sync: false
+      - key: ADMIN_API_KEY
+        value: your-admin-api-key
+        sync: false
+
+  # Optional: MySQL Database (uncomment if you want Render-hosted DB)
+  # - type: pserv
+  #   name: bansari-mysql
+  #   env: mysql
+  #   plan: free
+  #   databaseName: bansari_clinic
+  #   databaseUser: bansari_user
+

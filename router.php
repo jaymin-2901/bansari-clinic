@@ -3,7 +3,23 @@
  * PHP Built-in Server Router
  * Routes all requests to appropriate locations
  * Usage: php -S localhost:8000 router.php
+ * 
+ * For Render.com: php -S 0.0.0.0:$PORT router.php
  */
+
+// Get PORT from environment (Render.com provides this)
+$PORT = getenv('PORT') ?: 8000;
+
+// Health check endpoint - respond before any processing
+if ($_SERVER['REQUEST_URI'] === '/api/health' || $_SERVER['REQUEST_URI'] === '/health') {
+    header('Content-Type: application/json');
+    echo json_encode([
+        'status' => 'Backend running successfully',
+        'timestamp' => time(),
+        'environment' => getenv('APP_ENV') ?: 'development'
+    ]);
+    exit;
+}
 
 $uri = $_SERVER['REQUEST_URI'];
 $path = parse_url($uri, PHP_URL_PATH);
