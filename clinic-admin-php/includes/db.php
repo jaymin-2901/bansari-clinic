@@ -1,5 +1,11 @@
 <?php
 /**
- * Bansari Homeopathy Clinic – Admin DB Connection
+ * Bansari Homeopathy Clinic – Database Connection
+ * Includes MySQLi connection and helper functions
  */
-require_once __DIR__ . '/../../backend-php/config/clinic_db.php';
+
+// Use the new config file
+require_once __DIR__ . '/config/db.php';
+
+// Load auth functions
+require_once __DIR__ . '/auth.php';

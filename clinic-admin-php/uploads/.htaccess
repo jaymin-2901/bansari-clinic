@@ -1,0 +1,21 @@
+# Prevent direct PHP execution in uploads directory
+php_flag engine off
+
+# Block all files from being executed
+<FilesMatch "\.php$">
+    Deny from all
+</FilesMatch>
+
+# Allow image files only
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|pdf)$">
+    Allow from all
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
+
+# Block executable files
+<FilesMatch "\.(exe|sh|bat|cmd|vbs|js)$">
+    Deny from all
+</FilesMatch>
+
