@@ -176,7 +176,7 @@ function showToast(message, type) {
 
     async function updateBadge() {
         try {
-            const res = await fetch('/clinic-admin-php/api/notifications.php?action=get-counts');
+const res = await fetch('api/notifications.php?action=get-counts');
             const data = await res.json();
             if (data.success && data.counts) {
                 const c = data.counts;
