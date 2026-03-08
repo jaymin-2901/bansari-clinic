@@ -22,7 +22,9 @@ export function getBackendUrl(): string {
   return DEFAULT_BACKEND_URL;
 }
 
-export const API_URL = getBackendUrl() + '/api/clinic';
+// IMPORTANT: .htaccess rewrite is NOT working on InfinityFree, so we need to use full path
+// The correct URL is: https://bansari-homeopathic-clinic.infinityfreeapp.com/backend-php/api/clinic
+export const API_URL = getBackendUrl() + '/backend-php/api/clinic';
 
 // Debug function to log URL issues
 export function logApiError(context: string, error: unknown) {
@@ -197,4 +199,3 @@ export async function uploadCroppedImage(imageData: string, prefix: string = 'im
   });
   return res.json();
 }
-
