@@ -1,2 +1,0 @@
-# Bansari Homeopathy - Backup System Logs
-# This file is populated automatically by the backup scripts.
