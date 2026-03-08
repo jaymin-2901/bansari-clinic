@@ -1,6 +1,9 @@
 # ============================================================
-# Bansari Homeopathy Clinic - Apache Routing
+# MediConnect – Apache Routing Configuration
+# File: backend-php/.htaccess
 # ============================================================
+# This file handles URL routing for the PHP backend on Apache servers
+# (InfinityFree, cPanel, shared hosting)
 
 # Enable RewriteEngine
 <IfModule mod_rewrite.c>
@@ -9,27 +12,24 @@
 
     # Pass Authorization header to PHP (required for JWT)
     RewriteCond %{HTTP:Authorization} ^(.*)
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-    # API requests - route to backend-php/api/clinic/
+    # Handle API requests - route to api/clinic/ directory
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^api/(.*)$ backend-php/api/clinic/$1 [L,QSA]
+    RewriteRule ^api/(.*)$ api/clinic/$1 [L,QSA]
 
-    # Serve uploads from public/uploads/
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^uploads/(.*)$ public/uploads/$1 [L,QSA]
-
-    # Admin panel
+    # Handle uploads
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^admin/(.*)$ clinic-admin-php/$1 [L,QSA]
+    RewriteRule ^uploads/(.*)$ ../../public/uploads/$1 [L,QSA]
 </IfModule>
 
 # PHP Settings
 <IfModule mod_php7.c>
     php_flag display_errors Off
     php_flag log_errors On
+    php_value error_log /home/vol13_6/infinityfree.com/htdocs/logs/php_errors.log
 </IfModule>
 
 # Security Headers
@@ -38,15 +38,22 @@
     Header always set X-Frame-Options "DENY"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set X-XSS-Protection "0"
-    Header unset X-Powered-By
-    Header unset Server
+    Header always unset X-Powered-By
+    Header always unset Server
 </IfModule>
 
 # Deny access to sensitive files
-<FilesMatch "\.(env|log|sql|md|txt|bak|old|orig|swp|gitignore)$">
+<FilesMatch "\.(env|log|sql|md|txt|bak|old|orig|swp)$">
     Require all denied
 </FilesMatch>
 
 # Disable directory listing
 Options -Indexes
+
+# Fallback - if file doesn't exist, pass to router
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^$ router.php [L]
+</IfModule>
 
