@@ -1,6 +1,15 @@
-// Use relative URLs for API calls so they work both locally and from mobile
-// The Next.js rewrites in next.config.js will proxy these to the PHP backend
-export const API_URL = '/api/clinic';
+// Use NEXT_PUBLIC_BACKEND_URL for direct browser-to-backend calls
+// This bypasses Vercel's server-to-server proxy which fails with InfinityFree's SSL
+export function getBackendUrl(): string {
+  if (typeof window !== 'undefined') {
+    return (window as any).env?.NEXT_PUBLIC_BACKEND_URL || 
+           process.env.NEXT_PUBLIC_BACKEND_URL || 
+           'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+  }
+  return process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+}
+
+export const API_URL = getBackendUrl() + '/api/clinic';
 
 /* ── Settings (CMS key-value) ── */
 export async function fetchSettings(group: string = 'general') {
@@ -108,14 +117,12 @@ export async function fetchMyAppointments(patientId: number) {
 }
 
 /* ── Image URL helper ── */
-// Use relative URLs for static files so they work both locally and from mobile
-// The Next.js rewrites in next.config.js will proxy these to the PHP backend
 export function getImageUrl(path: string | null): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   
-  // Use relative URL so it works from any device
-  return `${path.startsWith('/') ? '' : '/'}${path}`;
+  // Use full URL pointing to InfinityFree backend
+  return `${getBackendUrl()}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
 /* ── Clinic Images ── */

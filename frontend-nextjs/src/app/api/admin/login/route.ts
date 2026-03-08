@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Email and password are required.' }, { status: 400 });
     }
 
-    const backendUrl = process.env.PHP_BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bansari-homeopathic-clinic.infinityfreeapp.com';
     const res = await fetch(`${backendUrl}/api/clinic/admin_login.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
