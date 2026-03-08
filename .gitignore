@@ -1,3 +1,49 @@
-# Ignore the frontend-nextjs directory (it's a separate repository)
+# Dependencies
+vendor/
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sqlite
+*.sqlite3
+
+# Uploads (keep directory structure but not files)
+uploads/*
+!uploads/about/.gitkeep
+!uploads/general/.gitkeep
+!uploads/home/.gitkeep
+!uploads/testimonials/.gitkeep
+
+# Backend PHP logs
+backend-php/logs/*
+
+# Backup system
+backup-system/logs/*
+backup-system/uploads/*
+
+# Frontend (separate repo)
 frontend-nextjs/
 
