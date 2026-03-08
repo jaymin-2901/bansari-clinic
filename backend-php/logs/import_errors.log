@@ -1,8 +1,0 @@
-[2026-02-26 22:11:05] FATAL: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'mediconnect.import_logs' doesn't exist in D:\mediconnect\backend\api\import_patients.php:621
-[2026-02-26 22:11:20] FATAL: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'gender' in 'field list' in D:\mediconnect\backend\api\import_patients.php:315
-[2026-02-26 22:11:26] FATAL: SQLSTATE[42S22]: Column not found: 1054 Unknown column 'gender' in 'field list' in D:\mediconnect\backend\api\import_patients.php:315
-[2026-02-27 15:43:20] FATAL: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in D:\mediconnect\backend\config\database.php:47
-[2026-02-27 15:43:36] FATAL: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in D:\mediconnect\backend\config\database.php:47
-[2026-02-27 18:17:22] FATAL: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in D:\mediconnect\backend\config\database.php:47
-[2026-02-27 18:17:43] FATAL: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in D:\mediconnect\backend\config\database.php:47
-[2026-02-27 18:17:52] FATAL: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it in D:\mediconnect\backend\config\database.php:47

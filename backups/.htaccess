@@ -1,9 +1,0 @@
-# Security configuration for /backups directory
-# Prevent direct access to backup files from web browser
-
-# Deny all access
-Order allow,deny
-Deny from all
-
-# Only allow authenticated admin downloads via PHP script
-# (handled in clinic-admin/api/download_backup.php)
