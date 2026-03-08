@@ -30,6 +30,17 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
+# Temporary/Dev files (never commit)
+*.tmp
+*.bak
+*.old
+tcookies*.txt
+test_*.php
+check_*.php
+fix_*.php
+write_*.php
+create_*.php
+
 # Uploads (keep directory structure but not files)
 uploads/*
 !uploads/about/.gitkeep
