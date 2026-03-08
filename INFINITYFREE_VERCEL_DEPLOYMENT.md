@@ -108,7 +108,7 @@ RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 In Vercel Dashboard:
 1. Go to **Settings** → **Environment Variables**
 2. Add:
-   - `PHP_BACKEND_URL` = `https://bansari-homeopathic-clinic.infinityfreeapp.com`
+   - `NEXT_PUBLIC_BACKEND_URL` = `https://bansari-homeopathic-clinic.infinityfreeapp.com`
 
 ### 4.2 Deploy/Redeploy
 1. Go to **Deployments**

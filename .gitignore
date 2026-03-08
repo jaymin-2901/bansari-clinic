@@ -55,6 +55,6 @@ backend-php/logs/*
 backup-system/logs/*
 backup-system/uploads/*
 
-# Frontend (separate repo)
-frontend-nextjs/
+# Frontend (separate repo) - UNCOMMENT TO ENABLE
+# frontend-nextjs/
 
