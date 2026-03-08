@@ -1,6 +1,12 @@
 <?php
 /**
  * Bansari Homeopathy Clinic – Database Connection (PDO)
+ * 
+ * This file ALWAYS loads production_config.php to ensure the InfinityFree
+ * database credentials are used for production deployments.
+ * 
+ * For local development, use clinic_config.php directly or configure
+ * environment variables to override the production settings.
  */
 
 require_once __DIR__ . '/production_config.php';

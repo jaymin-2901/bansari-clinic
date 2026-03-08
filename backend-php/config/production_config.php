@@ -39,4 +39,13 @@ define('APP_ENV', 'production');
 define('FRONTEND_URL', 'https://bansari-clinic.vercel.app');
 define('ALLOWED_ORIGINS', 'https://bansari-clinic.vercel.app');
 
+// ─── Clinic Timings (Hardcoded) ───
+define('CLINIC_MORNING_OPEN',  '09:30');
+define('CLINIC_MORNING_CLOSE', '13:00');
+define('CLINIC_EVENING_OPEN',  '17:00');
+define('CLINIC_EVENING_CLOSE', '20:00');
+define('CLINIC_CLOSED_DAY',    0); // 0 = Sunday
+define('NEW_PATIENT_DURATION', 30); // minutes
+define('OLD_PATIENT_DURATION', 15); // minutes
+
 

@@ -6,7 +6,8 @@
  * Handles both short (offline) and full (online) appointment forms.
  */
 
-require_once __DIR__ . '/../../config/clinic_config.php';
+// Load production config for InfinityFree database credentials and CORS
+require_once __DIR__ . '/../../config/production_config.php';
 require_once __DIR__ . '/../../config/clinic_db.php';
 setCORSHeaders();
 
