@@ -54,10 +54,15 @@ export async function fetchTestimonials() {
     const res = await fetch(`${API_URL}/testimonials.php`, {
       cache: 'no-store',
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const errorText = await res.text();
+      logApiError('fetchTestimonials', new Error(`HTTP ${res.status}: ${errorText}`));
+      return [];
+    }
     const json = await res.json();
     return json.data || [];
-  } catch {
+  } catch (error) {
+    logApiError('fetchTestimonials', error);
     return [];
   }
 }

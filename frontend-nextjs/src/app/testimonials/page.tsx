@@ -194,15 +194,8 @@ export default function TestimonialsPage() {
     });
   }, []);
 
-  // Sample fallback
-  const sampleTestimonials: Testimonial[] = [
-    { id: 1, patient_name: 'Rajeshbhai Patel', is_anonymous: 0, treatment_description: 'Chronic Skin Eczema – 5 years', testimonial_text: 'I had been suffering from severe eczema for 5 years. After just 3 months of treatment with Dr. Bansari, my skin has completely cleared up. Homeopathy truly works!', before_image: null, after_image: null, rating: 5 },
-    { id: 2, patient_name: 'Anonymous Patient', is_anonymous: 1, treatment_description: 'Migraine & Anxiety', testimonial_text: 'My chronic migraines and anxiety have reduced significantly since starting homeopathic treatment. Dr. Patel took detailed history and prescribed the perfect remedy.', before_image: null, after_image: null, rating: 5 },
-    { id: 3, patient_name: 'Priyaben Shah', is_anonymous: 0, treatment_description: 'PCOD Treatment', testimonial_text: "After years of hormonal issues, Dr. Bansari's homeopathic treatment has helped me tremendously. My cycles are regular now and I feel so much better overall.", before_image: null, after_image: null, rating: 4 },
-    { id: 4, patient_name: 'Mehulbhai Desai', is_anonymous: 0, treatment_description: 'Kidney Stones', testimonial_text: 'I was advised surgery for kidney stones, but Dr. Bansari\'s homeopathic treatment dissolved them within 2 months. I am grateful beyond words!', before_image: null, after_image: null, rating: 5 },
-  ];
-
-  const displayTestimonials = testimonials.length > 0 ? testimonials : sampleTestimonials;
+  // Now uses real API data exclusively
+  const displayTestimonials = testimonials;
   const hasImages = (item: Testimonial) => !!(item.before_image || item.after_image);
   const hasBothImages = (item: Testimonial) => !!(item.before_image && item.after_image);
 
