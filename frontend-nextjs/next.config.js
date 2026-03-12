@@ -8,13 +8,13 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '8000',
+        port: '8080',
         pathname: '/uploads/**',
       },
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '8080',
+        port: '8000',
         pathname: '/uploads/**',
       },
       {
@@ -39,7 +39,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_URL: '/api/clinic',
-    NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bansari-homeopathic-clinic.infinityfreeapp.com',
+    NEXT_PUBLIC_BACKEND_URL: 'http://localhost:8080',
   },
   async headers() {
     return [
@@ -54,15 +54,14 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://bansari-homeopathic-clinic.infinityfreeapp.com';
     return [
       {
         source: '/api/clinic/:path*',
-        destination: `${backendUrl}/api/clinic/:path*`,
+        destination: 'http://localhost:8080/api/clinic/:path*',
       },
       {
         source: '/uploads/:path*',
-        destination: `${backendUrl}/uploads/:path*`,
+        destination: 'http://localhost:8080/uploads/:path*',
       },
     ];
   },

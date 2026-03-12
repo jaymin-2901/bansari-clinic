@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { fetchSettings, getImageUrl } from '@/lib/api';
 
 interface ClinicSettings {
@@ -38,6 +38,7 @@ const ClinicSettingsContext = createContext<ClinicSettingsContextType | undefine
 export function ClinicSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<ClinicSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<NodeJS.Timeout>();
 
   const refreshSettings = async () => {
     try {
@@ -66,6 +67,19 @@ export function ClinicSettingsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     refreshSettings();
+  }, []);
+
+  // Polling for live updates every 10 seconds
+  useEffect(() => {
+    intervalRef.current = setInterval(() => {
+      refreshSettings();
+    }, 10000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, []);
 
   // Compute derived values

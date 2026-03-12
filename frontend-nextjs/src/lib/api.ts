@@ -1,39 +1,40 @@
-// Default backend URL - must match the actual InfinityFree domain
-const DEFAULT_BACKEND_URL = 'https://bansari-homeopathic-clinic.infinityfreeapp.com';
+// Default backend URL - for local development use localhost:8080 (PHP server with router.php)
+const DEFAULT_BACKEND_URL = 'http://localhost:8080';
 
 // Use NEXT_PUBLIC_BACKEND_URL for direct browser-to-backend calls
-// This bypasses Vercel's server-to-server proxy which fails with InfinityFree's SSL
 export function getBackendUrl(): string {
-  // Check for environment variable at runtime
   if (typeof window !== 'undefined') {
-    // Try to get from window.env first (set by Vercel)
+    if (process.env.NODE_ENV !== 'production') {
+      return 'http://localhost:8080';
+    }
+    
     const envBackendUrl = (window as any).env?.NEXT_PUBLIC_BACKEND_URL;
     if (envBackendUrl) return envBackendUrl;
     
-    // Try process.env.NEXT_PUBLIC_BACKEND_URL
     if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
     
-    // Fallback to default
     return DEFAULT_BACKEND_URL;
   }
   
-  // Server-side (for SSR)
+  if (process.env.NODE_ENV !== 'production') {
+    return 'http://localhost:8080';
+  }
   if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
   return DEFAULT_BACKEND_URL;
 }
 
-// IMPORTANT: .htaccess rewrite is NOT working on InfinityFree, so we need to use full path
-// The correct URL is: https://bansari-homeopathic-clinic.infinityfreeapp.com/backend-php/api/clinic
-export const API_URL = getBackendUrl() + '/backend-php/api/clinic';
+// API_PATH for clinic endpoints
+const API_PATH = process.env.NODE_ENV === 'production' ? '/backend-php/api/clinic' : '/api/clinic';
 
-// Debug function to log URL issues
+export const API_URL = getBackendUrl() + API_PATH;
+
+// Debug
 export function logApiError(context: string, error: unknown) {
   console.error(`[API Error] ${context}:`, error);
-  console.error(`[API Error] Backend URL being used: ${API_URL}`);
-  console.error(`[API Error] NEXT_PUBLIC_BACKEND_URL env: ${process.env.NEXT_PUBLIC_BACKEND_URL}`);
+  console.error(`[API Error] Backend URL: ${API_URL}`);
 }
 
-/* ── Settings (CMS key-value) ── */
+/* Settings */
 export async function fetchSettings(group: string = 'general') {
   try {
     const res = await fetch(`${API_URL}/settings.php?group=${group}`, {
@@ -47,7 +48,7 @@ export async function fetchSettings(group: string = 'general') {
   }
 }
 
-/* ── Testimonials ── */
+/* Testimonials */
 export async function fetchTestimonials() {
   try {
     const res = await fetch(`${API_URL}/testimonials.php`, {
@@ -61,7 +62,7 @@ export async function fetchTestimonials() {
   }
 }
 
-/* ── Contact Form ── */
+/* Contact */
 export async function submitContactForm(data: {
   name: string;
   email?: string;
@@ -77,7 +78,7 @@ export async function submitContactForm(data: {
   return res.json();
 }
 
-/* ── Appointments ── */
+/* Appointments */
 export async function bookAppointment(data: Record<string, any>) {
   const res = await fetch(`${API_URL}/appointments.php`, {
     method: 'POST',
@@ -87,7 +88,7 @@ export async function bookAppointment(data: Record<string, any>) {
   return res.json();
 }
 
-/* ── Slots ── */
+/* Slots */
 export async function fetchClosedDays() {
   try {
     const res = await fetch(`${API_URL}/slots.php?action=closed_days`);
@@ -108,37 +109,26 @@ export async function fetchAvailableSlots(date: string, patientId?: number) {
   }
 }
 
-/* ── Patient Auth ── */
+/* Patient Auth */
 export async function loginPatient(data: { mobile?: string; email?: string; password: string }) {
   const url = `${API_URL}/login.php`;
-  console.log('[Login] Attempting login to:', url);
-  console.log('[Login] Backend URL:', getBackendUrl());
+  console.log('[Login] URL:', url);
   
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
-      // Include credentials for session cookies
       credentials: 'include',
     });
     
-    console.log('[Login] Response status:', res.status);
-    console.log('[Login] Response ok:', res.ok);
-    
     if (!res.ok) {
       const errorText = await res.text();
-      console.error('[Login] Error response:', errorText);
       throw new Error(`HTTP ${res.status}: ${errorText}`);
     }
     
-    const json = await res.json();
-    console.log('[Login] Success:', json.success);
-    return json;
+    return await res.json();
   } catch (error) {
-    console.error('[Login] Network error:', error);
     logApiError('loginPatient', error);
     throw error;
   }
@@ -153,7 +143,7 @@ export async function signupPatient(data: Record<string, any>) {
   return res.json();
 }
 
-/* ── My Appointments ── */
+/* My Appointments */
 export async function fetchMyAppointments(patientId: number) {
   try {
     const res = await fetch(`${API_URL}/my_appointments.php?patient_id=${patientId}`);
@@ -164,37 +154,52 @@ export async function fetchMyAppointments(patientId: number) {
   }
 }
 
-/* ── Image URL helper ── */
+/* ── FIXED Image URL helper ── */
 export function getImageUrl(path: string | null): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   
-  // Use full URL pointing to InfinityFree backend
-  return `${getBackendUrl()}${path.startsWith('/') ? '' : '/'}${path}`;
-}
-
-/* ── Clinic Images ── */
-export async function fetchClinicImages() {
-  try {
-    const res = await fetch(`${API_URL}/clinic_images.php`, {
-      cache: 'no-store',
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data || [];
-  } catch {
-    return [];
+  if (process.env.NODE_ENV === 'production') {
+    return `${getBackendUrl()}${path.startsWith('/') ? '' : '/'}${path}`;
   }
+  
+  // Dev: Full URL to PHP server port 8080
+  return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
-/* ── Upload Cropped Image ── */
-export async function uploadCroppedImage(imageData: string, prefix: string = 'img') {
+/* Clinic Images (random fallback) */
+const CLINIC_IMAGES = [
+  'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80',
+  'https://images.unsplash.com/photo-1581595220892-b0739db338c5?w=800&q=80',
+  'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80',
+  'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&q=80',
+  'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80',
+  'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&q=80',
+  'https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=800&q=80',
+  'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=800&q=80',
+];
+
+export function getRandomClinicImage(): string {
+  return CLINIC_IMAGES[Math.floor(Math.random() * CLINIC_IMAGES.length)];
+}
+
+export function getRandomClinicImages(count = 6): string[] {
+  const shuffled = [...CLINIC_IMAGES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, Math.min(count, CLINIC_IMAGES.length));
+}
+
+export async function fetchClinicImages() {
+  return getRandomClinicImages(6);
+}
+
+/* Upload Cropped */
+export async function uploadCroppedImage(imageData: string, prefix = 'img') {
   const res = await fetch(`${API_URL}/crop_image.php`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       image_data: imageData,
-      prefix: prefix,
+      prefix,
     }),
   });
   return res.json();
