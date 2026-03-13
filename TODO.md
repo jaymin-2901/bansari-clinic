@@ -1,71 +1,22 @@
-# ✅ FIX COMPLETE: Admin Photos/Testimonials Now Reflect on Frontend
-**Status: ✅ RESOLVED** | **Date**: $(date)
+# Task Progress: Fix Servers, Images, Testimonials & Admin Panel
 
-## 🎉 IMPLEMENTATION SUMMARY
-**Root Cause Fixed**: Missing testimonials API → Frontend showed hardcoded samples
+## Plan Steps (Approved ✅)
 
-## ✅ COMPLETED STEPS
-### Step 1 ✅ `backend-php/api/clinic/testimonials.php` **CREATED**
-```
-GET /api/clinic/testimonials.php → Active testimonials w/ image paths
-Test: curl localhost:8080/api/clinic/testimonials.php ✅
-```
+### 1. [x] Create TODO.md with plan breakdown
+### 2. [x] Kill conflicting port 8000 (PID 9904)
+### 3. [x] Update frontend-nextjs/next.config.js (rewrite to port 80)
+### 4. [x] Update frontend-nextjs/src/lib/api.ts (fix getImageUrl to port 80)
+### 5. [x] Run testimonials activation SQL (3 active testimonials with before/after images found)
+### 6. [x] Started Next.js dev server (cd frontend-nextjs && npm run dev)
+### 7. [ ] Test:
+   - Admin login: **http://localhost/clinic-admin-php/login.php** (Default: admin@bansari.com / Admin@123)
+   - Frontend testimonials: **http://localhost:3000/testimonials** (should show images, no placeholders)
+   - Hero/home images: **http://localhost:3000/** 
+   - Backend API test: **http://localhost/api/clinic/testimonials.php**
 
-### Step 2 ✅ `frontend-nextjs/src/lib/api.ts` **UPDATED**
-```
-fetchTestimonials() → Added logging + error handling
-cache: 'no-store' → No caching issues
-```
+## All changes applied! Please test the links above and verify:
+- ✅ Images load (no "No Photo" placeholders)
+- ✅ Testimonials display with before/after sliders
+- ✅ Admin panel login works
 
-### Step 3 ✅ `frontend-nextjs/src/app/testimonials/page.tsx` **UPDATED**
-```
-❌ Removed sampleTestimonials fallback  
-✅ Now uses REAL API data exclusively
-✅ Better empty state handling
-```
-
-## 🔬 VERIFICATION COMMANDS
-```bash
-# Backend API test
-curl http://localhost:8080/api/clinic/testimonials.php
-
-# Frontend test (PHP server: localhost:8080, Next.js: localhost:3000)
-cd frontend-nextjs && npm run dev
-→ Visit localhost:3000/testimonials
-
-# Full flow test
-1. Admin: clinic-admin-php/testimonial_form.php → Add w/ images
-2. Frontend refresh → INSTANTLY appears! ✅
-```
-
-## 📊 **BEFORE vs AFTER**
-| Before | After |
-|--------|-------|
-| Admin updates → Never showed | Admin updates → Live sync ✅ |
-| Hardcoded fake samples | Real DB data |
-| Silent API 404s | Logged errors + real data |
-
-## 🚀 PRODUCTION DEPLOYMENT
-```
-1. PHP Backend → Your hosting (update NEXT_PUBLIC_BACKEND_URL)
-2. Vercel Frontend → Auto-deploys
-3. Test: yourdomain.com/testimonials
-```
-
-## 🛡️ PERMANENT PREVENTION
-```
-✅ Real-time API sync (no-cache)
-✅ Proper error logging  
-✅ DB indexes recommended
-✅ CORS headers included
-✅ Image path standardization
-```
-
-## 📝 NEXT STEPS (Optional)
-```
-[ ] Add DB indexes: backend-php/sql/indexes_testimonials.sql
-[ ] Create backend-php/api/README.md  
-[ ] Update PRODUCTION_DEPLOYMENT_CHECKLIST.md
-```
-
-**Admin updates now reflect IMMEDIATELY on frontend! 🎉**
+**Task complete when tests pass.** 🎉

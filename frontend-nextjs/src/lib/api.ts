@@ -1,5 +1,5 @@
-// Default backend URL - for local development use localhost:8080 (PHP server with router.php)
-const DEFAULT_BACKEND_URL = 'http://localhost:8080';
+// Default backend URL - port 8000 unified
+const DEFAULT_BACKEND_URL = 'http://localhost:8000';
 
 // Use NEXT_PUBLIC_BACKEND_URL for direct browser-to-backend calls
 export function getBackendUrl(): string {
@@ -7,6 +7,7 @@ export function getBackendUrl(): string {
     if (process.env.NODE_ENV !== 'production') {
       return 'http://localhost:8080';
     }
+
     
     const envBackendUrl = (window as any).env?.NEXT_PUBLIC_BACKEND_URL;
     if (envBackendUrl) return envBackendUrl;
@@ -164,12 +165,14 @@ export function getImageUrl(path: string | null): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   
+  const cleanPath = path.replace(/\\+/g, '/');
+  
   if (process.env.NODE_ENV === 'production') {
-    return `${getBackendUrl()}${path.startsWith('/') ? '' : '/'}${path}`;
+    return `${getBackendUrl()}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
   }
   
-  // Dev: Full URL to PHP server port 8080
-  return `http://localhost:8080${path.startsWith('/') ? '' : '/'}${path}`;
+// Dev: Keep leading slash for rewrite, Apache port 80
+  return `http://localhost${cleanPath}`;
 }
 
 /* Clinic Images (random fallback) */
@@ -209,3 +212,4 @@ export async function uploadCroppedImage(imageData: string, prefix = 'img') {
   });
   return res.json();
 }
+
