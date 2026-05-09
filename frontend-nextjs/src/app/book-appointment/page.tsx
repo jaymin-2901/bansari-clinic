@@ -4,6 +4,8 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { bookAppointment } from '@/lib/api';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useAuth } from '@/components/AuthContext';
+import { Info } from 'lucide-react';
 
 type Step = 1 | 2 | 3 | 4;
 type ConsultationType = 'offline' | 'online' | '';
@@ -38,7 +40,7 @@ interface SlotInfo {
   session: string;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
 const API_URL = process.env.NEXT_PUBLIC_API_URL || `${BACKEND_URL}/api/clinic`;
 
 export default function BookAppointmentPage() {
@@ -48,44 +50,35 @@ export default function BookAppointmentPage() {
   const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [appointmentId, setAppointmentId] = useState<number | null>(null);
-  const [loggedInPatientId, setLoggedInPatientId] = useState<number | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check authentication on mount and redirect if not logged in
+  // Check authentication and pre-fill form
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('patient');
-      if (raw) {
-        const p = JSON.parse(raw);
-        setLoggedInPatientId(p.id || null);
-        setIsLoggedIn(true);
-        // Pre-fill form with patient data
+    if (!authLoading) {
+      if (user) {
+        // Pre-fill form with patient data from context
         setBasic((prev) => ({
           ...prev,
-          full_name: p.name || prev.full_name,
-          mobile: p.mobile || prev.mobile,
-          age: p.age ? String(p.age) : prev.age,
-          gender: p.gender || prev.gender,
-          city: p.city || prev.city,
+          full_name: user.name || prev.full_name,
+          mobile: user.mobile || prev.mobile,
+          // Add other fields if available in user object
         }));
       } else {
-        // Not logged in - redirect to login with return URL
+        // Not logged in - AuthContext already handles redirection for protected routes,
+        // but we can add an extra check here if needed.
         router.push(`/login?returnUrl=${encodeURIComponent('/book-appointment')}`);
         return;
       }
-    } catch {
-      router.push(`/login?returnUrl=${encodeURIComponent('/book-appointment')}`);
-      return;
     }
 
     // Fetch closed days for date picker
     fetch(`${API_URL}/slots.php?action=closed_days`)
       .then(r => r.json())
       .then(d => { if (d.success) setClosedDays(d.closed_days); })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setIsLoading(false));
-  }, [router]);
+  }, [user, authLoading, router]);
 
   // Slot system state
   const [detectedPatientType, setDetectedPatientType] = useState<'new' | 'old'>('new');
@@ -106,29 +99,12 @@ export default function BookAppointmentPage() {
     appointment_time: '',
   });
 
-  // Pre-fill from logged-in patient + fetch closed days
+  // Fetch closed days for date picker (already handled in main useEffect, but keeping for slot consistency)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('patient');
-      if (raw) {
-        const p = JSON.parse(raw);
-        setLoggedInPatientId(p.id || null);
-        setBasic((prev) => ({
-          ...prev,
-          full_name: p.name || prev.full_name,
-          mobile: p.mobile || prev.mobile,
-          age: p.age ? String(p.age) : prev.age,
-          gender: p.gender || prev.gender,
-          city: p.city || prev.city,
-        }));
-      }
-    } catch {}
-
-    // Fetch closed days for date picker
     fetch(`${API_URL}/slots.php?action=closed_days`)
       .then(r => r.json())
       .then(d => { if (d.success) setClosedDays(d.closed_days); })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   // Fetch available slots when date changes (auto-detects patient type via patient_id)
@@ -154,7 +130,7 @@ export default function BookAppointmentPage() {
     setClinicOpen(true);
     setBasic(prev => ({ ...prev, appointment_time: '' }));
 
-    const pidParam = loggedInPatientId ? `&patient_id=${loggedInPatientId}` : '';
+    const pidParam = user ? `&patient_id=${user.id}` : '';
     fetch(`${API_URL}/slots.php?action=available_slots&date=${basic.appointment_date}${pidParam}`)
       .then(r => r.json())
       .then(data => {
@@ -162,8 +138,12 @@ export default function BookAppointmentPage() {
           setSlots(data.slots || []);
           setClinicOpen(data.is_open);
           setDetectedPatientType(data.patient_type || 'new');
+          
           if (!data.is_open) {
             setSlotMessage(data.message || 'Clinic is closed on this day.');
+          } else if (data.notice) {
+            // Partial closure notice
+            setSlotMessage(`Note: Certain slots are unavailable due to: ${data.notice}`);
           } else if (data.available === 0) {
             setSlotMessage('All slots are booked for this date. Please choose another date. / આ તારીખ માટે બધા સ્લોટ બુક થઈ ગયા છે.');
           }
@@ -173,7 +153,7 @@ export default function BookAppointmentPage() {
       })
       .catch(() => setSlotMessage('Failed to load slots. Please try again.'))
       .finally(() => setSlotsLoading(false));
-  }, [basic.appointment_date, loggedInPatientId, closedDays]);
+  }, [basic.appointment_date, user, closedDays]);
 
   // Short Form (Offline)
   const [shortForm, setShortForm] = useState({
@@ -260,8 +240,28 @@ export default function BookAppointmentPage() {
     return consultationType !== '';
   };
 
-  const nextStep = () => {
-    if (step === 1 && !validateStep1()) return;
+  const nextStep = async () => {
+    if (step === 1) {
+      if (!validateStep1()) return;
+      
+      // Final check for availability before proceeding
+      setIsLoading(true);
+      try {
+        const { checkBookingAvailability } = await import('@/lib/api');
+        const res = await checkBookingAvailability(basic.appointment_date, basic.appointment_time);
+        if (!res.available) {
+          setSlotMessage(res.message);
+          setClinicOpen(false);
+          setBasic(prev => ({ ...prev, appointment_time: '' }));
+          setIsLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.error('Availability check failed:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
     if (step === 2 && !validateStep2()) return;
     setStep((s) => Math.min(s + 1, 4) as Step);
   };
@@ -279,7 +279,7 @@ export default function BookAppointmentPage() {
       ...basic,
       age: parseInt(basic.age),
       consultation_type: consultationType,
-      ...(loggedInPatientId ? { patient_id: loggedInPatientId } : {}),
+      ...(user ? { patient_id: user.id } : {}),
     };
 
     if (consultationType === 'offline') {
@@ -343,11 +343,10 @@ export default function BookAppointmentPage() {
               <div key={s.num} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                      step >= s.num
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${step >= s.num
                         ? 'bg-primary-500 text-white'
                         : 'bg-gray-200 dark:bg-dark-border text-gray-500 dark:text-gray-400'
-                    }`}
+                      }`}
                   >
                     {step > s.num ? '✓' : s.num}
                   </div>
@@ -442,8 +441,11 @@ export default function BookAppointmentPage() {
                       min={getMinDate()}
                       required
                     />
-                    {basic.appointment_date && !clinicOpen && (
-                      <p className="text-red-500 text-sm mt-1">⚠️ {slotMessage}</p>
+                    {basic.appointment_date && slotMessage && (
+                      <div className={`mt-2 p-3 rounded-lg text-sm flex items-start gap-2 ${clinicOpen ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400 border border-amber-200 dark:border-amber-800' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
+                        <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                        <p>{slotMessage}</p>
+                      </div>
                     )}
                   </div>
 
@@ -455,7 +457,7 @@ export default function BookAppointmentPage() {
                         <span className="font-semibold">Clinic Hours / ક્લિનિક સમય:</span>
                       </div>
                       <p>Morning / સવાર: 9:30 AM – 1:00 PM &nbsp;|&nbsp; Evening / સાંજ: 5:00 PM – 8:00 PM</p>
-                      {loggedInPatientId && (
+                      {user && (
                         <p className="mt-1 text-xs text-blue-600 dark:text-blue-400">
                           Patient Type / દર્દી પ્રકાર: <span className="font-semibold">{detectedPatientType === 'new' ? 'New Patient / નવા દર્દી' : 'Existing Patient / જૂના દર્દી'}</span>
                           &nbsp;({detectedPatientType === 'new' ? '30 min slots' : '15 min slots'})
@@ -488,15 +490,14 @@ export default function BookAppointmentPage() {
                                     type="button"
                                     disabled={!slot.available}
                                     onClick={() => setBasic({ ...basic, appointment_time: slot.time })}
-                                    className={`py-2 px-1 rounded-lg text-sm font-medium border transition-all ${
-                                      basic.appointment_time === slot.time
+                                    className={`py-2 px-1 rounded-lg text-sm font-medium border transition-all ${basic.appointment_time === slot.time
                                         ? 'border-primary-500 bg-primary-500 text-white shadow-md'
                                         : slot.available
-                                        ? 'border-gray-200 dark:border-dark-border hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-dark-card text-gray-700 dark:text-gray-400'
-                                        : slot.booked
-                                        ? 'border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-300 dark:text-red-500 cursor-not-allowed line-through'
-                                        : 'border-gray-100 dark:border-dark-border bg-gray-50 dark:bg-dark-card text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                                    }`}
+                                          ? 'border-gray-200 dark:border-dark-border hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-dark-card text-gray-700 dark:text-gray-400'
+                                          : slot.booked
+                                            ? 'border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-300 dark:text-red-500 cursor-not-allowed line-through'
+                                            : 'border-gray-100 dark:border-dark-border bg-gray-50 dark:bg-dark-card text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                                      }`}
                                     title={slot.booked ? 'Already booked / પહેલેથી બુક' : slot.past ? 'Time passed / સમય વીતી ગયો' : slot.display}
                                   >
                                     {slot.display}
@@ -519,15 +520,14 @@ export default function BookAppointmentPage() {
                                     type="button"
                                     disabled={!slot.available}
                                     onClick={() => setBasic({ ...basic, appointment_time: slot.time })}
-                                    className={`py-2 px-1 rounded-lg text-sm font-medium border transition-all ${
-                                      basic.appointment_time === slot.time
+                                    className={`py-2 px-1 rounded-lg text-sm font-medium border transition-all ${basic.appointment_time === slot.time
                                         ? 'border-primary-500 bg-primary-500 text-white shadow-md'
                                         : slot.available
-                                        ? 'border-gray-200 dark:border-dark-border hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-dark-card text-gray-700 dark:text-gray-400'
-                                        : slot.booked
-                                        ? 'border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-300 dark:text-red-500 cursor-not-allowed line-through'
-                                        : 'border-gray-100 dark:border-dark-border bg-gray-50 dark:bg-dark-card text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                                    }`}
+                                          ? 'border-gray-200 dark:border-dark-border hover:border-primary-300 hover:bg-primary-50 dark:hover:bg-dark-card text-gray-700 dark:text-gray-400'
+                                          : slot.booked
+                                            ? 'border-red-100 dark:border-red-800 bg-red-50 dark:bg-red-900/30 text-red-300 dark:text-red-500 cursor-not-allowed line-through'
+                                            : 'border-gray-100 dark:border-dark-border bg-gray-50 dark:bg-dark-card text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                                      }`}
                                     title={slot.booked ? 'Already booked / પહેલેથી બુક' : slot.past ? 'Time passed / સમય વીતી ગયો' : slot.display}
                                   >
                                     {slot.display}
@@ -567,15 +567,14 @@ export default function BookAppointmentPage() {
                   <button
                     type="button"
                     onClick={() => setConsultationType('offline')}
-                    className={`p-6 rounded-xl border-2 text-left transition-all ${
-                      consultationType === 'offline'
+                    className={`p-6 rounded-xl border-2 text-left transition-all ${consultationType === 'offline'
                         ? 'border-primary-500 bg-primary-50 dark:bg-dark-card'
                         : 'border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-500'
-                    }`}
+                      }`}
                   >
                     <div className="text-3xl mb-3">🏥</div>
-                    <h3 className="font-bold text-gray-900 dark:text-gray-200 text-lg">Offline Consultation / ઓફલાઇન પરામર્શ</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Visit the clinic in person / ક્લિનિકમાં રૂબરૂ મુલાકાત</p>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-200 text-lg">Old Patient / જૂના દર્દી</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Visit the clinic for follow-up / ક્લિનિકમાં ફોલો-અપ માટે મુલાકાત</p>
                     <div className="mt-3 text-xs text-primary-600 dark:text-dark-accent font-medium bg-primary-50 dark:bg-dark-accent/15 px-2 py-1 rounded inline-block">
                       Short Form / ટૂંકું ફોર્મ
                     </div>
@@ -584,14 +583,13 @@ export default function BookAppointmentPage() {
                   <button
                     type="button"
                     onClick={() => setConsultationType('online')}
-                    className={`p-6 rounded-xl border-2 text-left transition-all ${
-                      consultationType === 'online'
+                    className={`p-6 rounded-xl border-2 text-left transition-all ${consultationType === 'online'
                         ? 'border-primary-500 bg-primary-50 dark:bg-dark-card'
                         : 'border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-500'
-                    }`}
+                      }`}
                   >
                     <div className="text-3xl mb-3">💻</div>
-                    <h3 className="font-bold text-gray-900 dark:text-gray-200 text-lg">Online Consultation / ઓનલાઇન પરામર્શ</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-gray-200 text-lg">New Patient / નવા દર્દી</h3>
                     <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Detailed case-taking for comprehensive treatment / વિગતવાર કેસ ટેકિંગ</p>
                     <div className="mt-3 text-xs text-primary-600 dark:text-dark-accent font-medium bg-primary-50 dark:bg-dark-accent/15 px-2 py-1 rounded inline-block">
                       Full Homeopathic Case Form / સંપૂર્ણ હોમિયોપેથિક ફોર્મ
@@ -613,7 +611,7 @@ export default function BookAppointmentPage() {
             {step === 3 && consultationType === 'offline' && (
               <div className="card">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-1">Medical Details / તબીબી વિગતો</h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Short form for offline consultation / ઓફલાઇન પરામર્શ માટે ટૂંકું ફોર્મ</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Short form for old patient / જૂના દર્દી માટે ટૂંકું ફોર્મ</p>
                 <div className="space-y-4">
                   <div>
                     <label className="label-text">Chief Complaint / મુખ્ય તકલીફ *</label>
@@ -641,11 +639,10 @@ export default function BookAppointmentPage() {
                       {majorDiseaseOptions.map((disease) => (
                         <label
                           key={disease}
-                          className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${
-                            shortForm.major_diseases.includes(disease)
+                          className={`flex items-center space-x-2 p-2 rounded-lg border cursor-pointer transition-colors ${shortForm.major_diseases.includes(disease)
                               ? 'border-primary-500 bg-primary-50 dark:bg-dark-card'
                               : 'border-gray-200 dark:border-dark-border hover:border-gray-300 dark:hover:border-gray-500'
-                          }`}
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -685,7 +682,7 @@ export default function BookAppointmentPage() {
                       className="mt-1 accent-primary-500"
                     />
                     <span className="text-sm text-gray-600 dark:text-gray-400">
-                      I declare that the above information is true and correct to the best of my knowledge. / 
+                      I declare that the above information is true and correct to the best of my knowledge. /
                       હું જાહેર કરું છું કે ઉપરોક્ત માહિતી મારી શ્રેષ્ઠ જાણકારી મુજબ સાચી અને સચોટ છે.
                     </span>
                   </label>
@@ -1003,7 +1000,7 @@ export default function BookAppointmentPage() {
                 <div className="bg-primary-50 dark:bg-dark-card rounded-lg p-4 mb-6 text-left max-w-sm mx-auto">
                   <p className="text-sm text-gray-700 dark:text-gray-400"><strong>Name / નામ:</strong> {basic.full_name}</p>
                   <p className="text-sm text-gray-700 dark:text-gray-400"><strong>Date / તારીખ:</strong> {basic.appointment_date}</p>
-                  <p className="text-sm text-gray-700 dark:text-gray-400"><strong>Time / સમય:</strong> {basic.appointment_time ? (() => { const [h,m] = basic.appointment_time.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`; })() : '—'}</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-400"><strong>Time / સમય:</strong> {basic.appointment_time ? (() => { const [h, m] = basic.appointment_time.split(':').map(Number); return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`; })() : '—'}</p>
                   <p className="text-sm text-gray-700 dark:text-gray-400"><strong>Type / પ્રકાર:</strong> {consultationType === 'offline' ? 'Offline (In-Clinic) / ઓફલાઇન' : 'Online (Detailed) / ઓનલાઇન'}</p>
                 </div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">

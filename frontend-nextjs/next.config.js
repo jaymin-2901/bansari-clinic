@@ -1,14 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  lint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '8080',
+        port: '',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
         pathname: '/uploads/**',
       },
       {
@@ -39,7 +42,7 @@ const nextConfig = {
   },
   env: {
     NEXT_PUBLIC_API_URL: '/api/clinic',
-    NEXT_PUBLIC_BACKEND_URL: 'http://localhost:8080',
+    NEXT_PUBLIC_BACKEND_URL: 'http://localhost',
   },
   async headers() {
     return [
@@ -57,11 +60,15 @@ const nextConfig = {
     return [
       {
         source: '/api/clinic/:path*',
-        destination: 'http://localhost:8080/api/clinic/:path*',
+        destination: 'http://localhost:8000/api/clinic/:path*',
+      },
+      {
+        source: '/api/patient/:path*',
+        destination: 'http://localhost:8000/api/patient/:path*',
       },
       {
         source: '/uploads/:path*',
-        destination: 'http://localhost:8080/uploads/:path*',
+        destination: 'http://localhost:8000/uploads/:path*',
       },
     ];
   },

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 import { signupPatient } from '@/lib/api';
 import { useClinicSettings } from '@/components/ClinicSettingsContext';
+import { useAuth } from '@/components/AuthContext';
 
 /* ── Eye icon SVGs ── */
 function EyeIcon() {
@@ -40,6 +41,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { t } = useLanguage();
+  const { login } = useAuth();
   
   // Get dynamic clinic settings
   const { clinicName, clinicLogo } = useClinicSettings();
@@ -83,9 +85,12 @@ export default function SignupPage() {
       });
       if (data.error) {
         setError(data.error || 'Signup failed. Please try again.');
-      } else {
-        localStorage.setItem('patient', JSON.stringify(data.patient));
+      } else if (data.success) {
+        // Use AuthContext login to store tokens and user info
+        login(data.user, data.access_token, data.refresh_token);
         setSuccess(true);
+      } else {
+        setError('Signup failed. Please try again.');
       }
     } catch {
       setError('Network error. Please check your connection.');

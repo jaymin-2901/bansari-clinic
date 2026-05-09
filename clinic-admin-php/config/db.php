@@ -2,15 +2,16 @@
 /**
  * Bansari Homeopathy Clinic – Database Configuration
  * Supports both MySQLi and PDO connections
+ * 
+ * Production Settings (InfinityFree)
  */
 
-// Database credentials - Update these for your server
-// For production, use environment variables or a secure config file
-$db_host = getenv('DB_HOST') ?: 'localhost';
-$db_port = getenv('DB_PORT') ?: '3307';
-$db_name = getenv('DB_NAME') ?: 'bansari_clinic';
-$db_user = getenv('DB_USER') ?: 'root';
-$db_pass = getenv('DB_PASS') ?: '';
+// Database credentials - Local Development
+$db_host = 'localhost';
+$db_port = '3306';
+$db_name = 'bansari_clinic';
+$db_user = 'root';
+$db_pass = '';
 
 // Timezone
 date_default_timezone_set('Asia/Kolkata');

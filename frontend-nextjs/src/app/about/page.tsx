@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
-import { fetchSettings, getImageUrl, fetchClinicImages } from '@/lib/api';
+import { fetchSettings, getImageUrl, getRandomClinicImages } from '@/lib/api';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
@@ -20,28 +20,20 @@ interface AboutSettings {
   [key: string]: string | undefined;
 }
 
-interface ClinicImage {
-  id: number;
-  image_path: string;
-  created_at: string;
-}
-
 export default function AboutPage() {
   const { t } = useLanguage();
   const [settings, setSettings] = useState<AboutSettings>({});
-  const [clinicImages, setClinicImages] = useState<ClinicImage[]>([]);
+  const [clinicImages, setClinicImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   useEffect(() => {
-    // Fetch both settings and clinic images in parallel
-    Promise.all([
-      fetchSettings('about'),
-      fetchClinicImages()
-    ]).then(([settingsData, images]) => {
-      setSettings(settingsData);
-      setClinicImages(images);
+    // Fetch settings and use random images
+    fetchSettings('about').then((data) => {
+      setSettings(data || {});
+      // Use random clinic images
+      setClinicImages(getRandomClinicImages(6));
       setLoading(false);
     });
   }, []);
@@ -240,14 +232,14 @@ export default function AboutPage() {
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-200 mb-4">{t('Our Clinic', 'અમારું ક્લિનિક')}</h2>
           <p className="text-lg text-gray-600 dark:text-gray-400 mb-8">{t('A warm, welcoming space designed for your comfort and healing.', 'તમારા આરામ અને ઉપચાર માટે ડિઝાઇન કરેલ ઉષ્માભર્યું, આવકારદાયક સ્થળ.')}</p>
           
-          {/* Dynamic Gallery from clinic_images table */}
+          {/* Random clinic images gallery */}
           {clinicImages && clinicImages.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-              {clinicImages.map((img) => (
-                <div key={img.id} className="relative group overflow-hidden rounded-xl shadow-lg">
+              {clinicImages.map((img, index) => (
+                <div key={index} className="relative group overflow-hidden rounded-xl shadow-lg">
                   <img 
-                    src={img.image_path} 
-                    alt="Clinic Image" 
+                    src={img} 
+                    alt={`Clinic Image ${index + 1}`} 
                     className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-110"
                     onError={(e) => { 
                       (e.target as HTMLImageElement).style.display = 'none'; 

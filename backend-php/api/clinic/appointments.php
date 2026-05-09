@@ -6,8 +6,7 @@
  * Handles both short (offline) and full (online) appointment forms.
  */
 
-// Load production config for InfinityFree database credentials and CORS
-require_once __DIR__ . '/../../config/production_config.php';
+// Load config - clinic_db.php handles local vs production automatically
 require_once __DIR__ . '/../../config/clinic_db.php';
 setCORSHeaders();
 
@@ -16,6 +15,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $data = getJsonInput();
+
+// ── Check global clinic status (Notices/Closures) ──
+$appointmentDate = $data['appointment_date'] ?? '';
+$appointmentTime = $data['appointment_time'] ?? '00:00:00';
+$checkDateTime = "$appointmentDate $appointmentTime";
+
+$clinicStatus = getClinicStatus($checkDateTime);
+if ($clinicStatus['closed']) {
+    jsonResponse(['error' => 'Clinic is closed at selected date and time. ' . $clinicStatus['message']], 403);
+}
 
 // ─── Validate basic patient info ───
 $error = validateRequired($data, ['full_name', 'mobile', 'age', 'gender', 'city', 'appointment_date', 'consultation_type']);

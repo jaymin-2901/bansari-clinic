@@ -76,8 +76,37 @@ if (str_starts_with($path, '/assets/')) {
 }
 
 // Handle root path "/" - redirect to admin login
-if ($path === '/' || $path === '') {
+if ($path === '/' || $path === '' || $path === '/clinic-admin-php') {
     header('Location: /clinic-admin-php/index.php');
+    exit;
+}
+
+// Handle /login route -> clinic-admin-php/login.php
+if ($path === '/login' || $path === '/login.php') {
+    header('Location: /clinic-admin-php/login.php');
+    exit;
+}
+
+// Handle /backend-php/* routes -> clinic-admin-php/* (for backward compatibility)
+if (str_starts_with($path, '/backend-php/')) {
+    $backendPath = substr($path, strlen('/backend-php')); // removes /backend-php
+    // Add .php extension if not present
+    if (!str_ends_with($backendPath, '.php')) {
+        $backendPath = $backendPath . '.php';
+    }
+    if ($backendPath === '.php') $backendPath = 'index.php';
+    $docRoot = __DIR__ . '/clinic-admin-php';
+    $file = $docRoot . '/' . ltrim($backendPath, '/');
+    if (file_exists($file) && is_file($file)) {
+        chdir($docRoot);
+        include $file;
+        return true;
+    }
+}
+
+// Handle /dashboard route -> clinic-admin-php/dashboard.php
+if ($path === '/dashboard' || $path === '/dashboard.php') {
+    header('Location: /clinic-admin-php/dashboard.php');
     exit;
 }
 
@@ -109,12 +138,44 @@ if (str_starts_with($path, '/uploads/')) {
 
 // Serve files from clinic-admin-php if they exist
 $docRoot = __DIR__ . '/clinic-admin-php';
-$file = $docRoot . $path;
+$file = __DIR__ . $path; // Fixed: $path already includes /clinic-admin-php
+
+// Handle directory access
+if (is_dir($file)) {
+    $indexFile = rtrim($file, '/') . '/index.php';
+    if (file_exists($indexFile)) {
+        $file = $indexFile;
+    }
+}
+
 if (file_exists($file) && is_file($file)) {
-    // Serve the file from the correct directory
-    chdir($docRoot);
-    include $file;
-    return true;
+    $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    
+    if ($ext === 'php') {
+        // Serve the PHP file from the correct directory
+        chdir($docRoot);
+        include $file;
+        return true;
+    } else {
+        // Serve static assets with correct MIME types
+        $mimeTypes = [
+            'css' => 'text/css',
+            'js'  => 'application/javascript',
+            'jpg' => 'image/jpeg',
+            'jpeg'=> 'image/jpeg',
+            'png' => 'image/png',
+            'webp'=> 'image/webp',
+            'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+            'pdf' => 'application/pdf',
+        ];
+        $mime = $mimeTypes[$ext] ?? mime_content_type($file);
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($file));
+        header('Cache-Control: public, max-age=86400');
+        readfile($file);
+        return true;
+    }
 }
 
 // Default: let PHP built-in server handle the request

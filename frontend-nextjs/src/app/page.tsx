@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
-import { fetchTestimonials, fetchSettings, getImageUrl } from '@/lib/api';
-import { motion, useInView } from 'framer-motion';
+import { fetchTestimonials, fetchSettings, getImageUrl, fetchHeroImages } from '@/lib/api';
+import { motion, useInView, AnimatePresence } from 'framer-motion';
 
 /* ── Hook to detect mobile screen ── */
 function useIsMobile() {
@@ -41,6 +41,12 @@ interface HomeSettings {
   home_hero_image_mobile?: string;
 }
 
+interface HeroImage {
+  id: number;
+  desktop_url: string;
+  mobile_url: string | null;
+}
+
 /* ── Reusable fade-in wrapper ── */
 function FadeIn({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   const ref = useRef(null);
@@ -61,15 +67,12 @@ function FadeIn({ children, className = '', delay = 0 }: { children: React.React
 export default function HomePage() {
   const { t } = useLanguage();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [heroImages, setHeroImages] = useState<HeroImage[]>([]);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [settings, setSettings] = useState<HomeSettings>({});
   const [loadingSettings, setLoadingSettings] = useState(true);
   const isMobile = useIsMobile();
-
-  // Determine hero image based on screen size
-  const heroImage = isMobile 
-    ? (settings.home_hero_image_mobile || settings.home_hero_image)
-    : settings.home_hero_image;
 
   useEffect(() => {
     // Fetch settings
@@ -78,11 +81,25 @@ export default function HomePage() {
       setLoadingSettings(false);
     });
     
+    // Fetch hero images
+    fetchHeroImages().then((data) => {
+      setHeroImages(data || []);
+    });
+
     // Fetch testimonials
     fetchTestimonials().then((data) => {
       setTestimonials((data || []).slice(0, 6));
     });
   }, []);
+
+  // Auto-rotate hero images
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroImages.length]);
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -98,158 +115,165 @@ export default function HomePage() {
       <span key={i} className={`text-sm ${i < rating ? 'text-amber-400' : 'text-gray-200 dark:text-gray-600'}`}>★</span>
     ));
 
+  // Determine current hero image
+  const currentHero = heroImages[currentHeroIndex];
+  const heroImage = currentHero 
+    ? (isMobile && currentHero.mobile_url ? currentHero.mobile_url : currentHero.desktop_url)
+    : (isMobile ? (settings.home_hero_image_mobile || settings.home_hero_image) : settings.home_hero_image);
+
   return (
     <>
       {/* ═══════════════════════════════════════════ */}
-      {/* ═══ HERO SECTION ═══ */}
+      {/* ═══ HERO SECTION (Dynamic Carousel) ═══ */}
       {/* ═══════════════════════════════════════════ */}
-      {/* 
-        Hero background image logic:
-        - Mobile (≤768px): Use mobile image if available, otherwise fallback to desktop image
-        - Desktop (>768px): Use desktop image 
-      */}
-      <section 
-        className="relative overflow-hidden"
-        style={heroImage ? {
-          backgroundImage: `url(${getImageUrl(heroImage) || ''})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        } : undefined}
-      >
-        {/* Background overlay - always present for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50/95 via-white/95 to-teal-50/95 dark:from-dark-bg/95 dark:via-dark-surface/95 dark:to-dark-bg/95" />
+      <section className="relative h-[85vh] sm:h-[80vh] lg:h-[90vh] overflow-hidden bg-gray-900 border-b border-white/10 shadow-lg">
+        {/* Carousel Background */}
+        <div className="absolute inset-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentHeroIndex}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="absolute inset-0 z-0"
+              style={{
+                backgroundImage: heroImage ? `url(${getImageUrl(heroImage)})` : 'none',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }}
+            >
+              {/* Fallback pattern if no image */}
+              {!heroImage && (
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-teal-50 dark:from-dark-bg dark:via-dark-surface dark:to-dark-bg" />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Global Overlays */}
+        {/* Subtle dark overlay to make hero pop */}
+        <div className="absolute inset-0 bg-black/30 dark:bg-black/50 z-1" />
+        {/* Dynamic Gradient for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent z-2" />
         
         {/* Decorative blobs - only show when no hero image */}
-        {!(isMobile ? (settings.home_hero_image_mobile || settings.home_hero_image) : settings.home_hero_image) && (
-          <>
+        {!heroImage && (
+          <div className="z-0">
             <div className="absolute top-10 right-0 w-[500px] h-[500px] bg-primary-100/30 dark:bg-teal-900/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4 pointer-events-none animate-float" />
             <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-teal-100/20 dark:bg-teal-300/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4 pointer-events-none" />
-          </>
+          </div>
         )}
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 md:py-28 lg:py-36">
-          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-            {/* Left content */}
-            <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-100/80 dark:bg-teal-300/15 text-primary-700 dark:text-teal-300 rounded-full text-sm font-medium mb-6 backdrop-blur-sm"
-              >
-                <span className="w-2 h-2 bg-primary-500 dark:bg-teal-300 rounded-full animate-pulse" />
-                {t('Classical Homeopathy', 'ક્લાસિકલ હોમિયોપેથી')}
-              </motion.div>
-
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="text-4xl sm:text-5xl lg:text-6xl font-bold font-heading text-gray-900 dark:text-white leading-[1.1] tracking-tight mb-6"
-              >
-                {settings.home_hero_title || t('Gentle Healing,', 'હળવા ઉપચાર,')}{' '}
-                <span className="text-primary-500 dark:text-teal-300">
-                  {settings.home_hero_subtitle || (settings.home_hero_title ? '' : t('Lasting Results', 'કાયમી પરિણામો'))}
-                </span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 mb-8 leading-relaxed max-w-xl"
-              >
-                {settings.home_hero_description || (settings.home_hero_title ? '' : t(
-                  'Experience personalized homeopathic treatment with Dr. Bansari Patel. Holistic care for chronic and acute conditions, treating mind, body and spirit.',
-                  'ડૉ. બંસરી પટેલ સાથે વ્યક્તિગત હોમિયોપેથિક સારવારનો અનુભવ કરો. ક્રોનિક અને એક્યુટ રોગો માટે મન, શરીર અને આત્માની સંપૂર્ણ સંભાળ.'
-                ))}
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4"
-              >
-                <Link href="/book-appointment" className="btn-primary text-center text-base sm:text-lg px-8 py-3.5 flex items-center justify-center gap-2">
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  {t('Book Appointment', 'એપોઇન્ટમેન્ટ બુક કરો')}
-                </Link>
-                <Link href="/about" className="btn-outline text-center text-base sm:text-lg px-8 py-3.5">
-                  {t('Learn More', 'વધુ જાણો')}
-                </Link>
-              </motion.div>
-
-              {/* Quick stats */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.6, delay: 0.5 }}
-                className="flex flex-wrap gap-6 sm:gap-8 mt-10 pt-8 border-t border-gray-200/60 dark:border-dark-border"
-              >
-                {[
-                  { value: '10+', label: t('Years Experience', 'વર્ષોનો અનુભવ') },
-                  { value: '5000+', label: t('Patients Treated', 'દર્દીઓની સારવાર') },
-                  { value: '4.9★', label: t('Patient Rating', 'દર્દી રેટિંગ') },
-                ].map((stat) => (
-                  <div key={stat.label}>
-                    <p className="text-2xl sm:text-3xl font-bold font-heading text-primary-500 dark:text-teal-300">{stat.value}</p>
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">{stat.label}</p>
-                  </div>
-                ))}
-              </motion.div>
-            </div>
-
-            {/* Right visual */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center">
+          <div className="max-w-3xl">
+            {/* Badge */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative hidden lg:block"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500/20 border border-primary-500/30 backdrop-blur-md text-primary-200 rounded-full text-sm font-medium mb-8"
             >
-              <div className="relative w-full aspect-[4/5] max-w-md mx-auto">
-                {/* Main card */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary-400/90 to-primary-600 rounded-3xl shadow-soft-xl overflow-hidden">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.12),transparent)]" />
-                  <div className="flex flex-col items-center justify-center h-full p-8 text-white">
-                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6 shadow-glow-lg">
-                      <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-2xl font-bold font-heading mb-1">Dr. Bansari Patel</h3>
-                    <p className="text-primary-100 text-sm mb-4">BHMS, MD (Homeopathy)</p>
-                    <div className="w-16 h-px bg-white/30 mb-4" />
-                    <p className="text-primary-100 text-center text-sm leading-relaxed max-w-[240px]">
-                      {t('Dedicated to gentle, holistic healthcare through classical homeopathy', 'ક્લાસિકલ હોમિયોપેથી દ્વારા હળવી, સંપૂર્ણ આરોગ્ય સેવા માટે સમર્પિત')}
-                    </p>
-                  </div>
-                </div>
+              <span className="w-2 h-2 bg-primary-400 rounded-full animate-pulse" />
+              {t('Classical Homeopathy', 'ક્લાસિકલ હોમિયોપેથી')}
+            </motion.div>
 
-                {/* Floating badge */}
-                <div className="absolute -bottom-4 -left-4 bg-white dark:bg-dark-card rounded-2xl shadow-soft-lg p-4 flex items-center gap-3 border border-gray-100 dark:border-dark-border">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900 dark:text-white">{t('Trusted Care', 'વિશ્વસનીય સંભાળ')}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{t('10+ years of practice', '10+ વર્ષનો અનુભવ')}</p>
-                  </div>
+            {/* Content */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-4xl sm:text-6xl lg:text-7xl font-bold font-heading text-white leading-[1.1] tracking-tight mb-6"
+            >
+              {settings.home_hero_title || t('Gentle Healing,', 'હળવા ઉપચાર,')}{' '}
+              <span className="text-primary-400 dark:text-teal-300">
+                {settings.home_hero_subtitle || (settings.home_hero_title ? '' : t('Lasting Results', 'કાયમી પરિણામો'))}
+              </span>
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-lg sm:text-xl lg:text-2xl text-gray-200 dark:text-gray-300 mb-10 leading-relaxed max-w-2xl"
+            >
+              {settings.home_hero_description || (settings.home_hero_title ? '' : t(
+                'Experience personalized homeopathic treatment with Dr. Bansari Patel. Holistic care for chronic and acute conditions, treating mind, body and spirit.',
+                'ડૉ. બંસરી પટેલ સાથે વ્યક્તિગત હોમિયોપેથિક સારવારનો અનુભવ કરો. ક્રોનિક અને એક્યુટ રોગો માટે મન, શરીર અને આત્માની સંપૂર્ણ સંભાળ.'
+              ))}
+            </motion.p>
+
+            {/* Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-4 lg:gap-6"
+            >
+              <Link href="/book-appointment" className="btn-primary text-center text-lg px-8 py-4 flex items-center justify-center gap-3 shadow-glow-lg active:scale-95 transition-transform">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {t('Book Appointment', 'એપોઇન્ટમેન્ટ બુક કરો')}
+              </Link>
+              <Link href="/about" className="btn-outline border-white/50 text-white hover:bg-white/10 hover:border-white text-center text-lg px-8 py-4 backdrop-blur-sm active:scale-95 transition-transform">
+                {t('Learn More', 'વધુ જાણો')}
+              </Link>
+            </motion.div>
+
+            {/* Stats */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex flex-wrap gap-8 sm:gap-12 mt-12 pt-10 border-t border-white/10"
+            >
+              {[
+                { value: '10+', label: t('Years Experience', 'વર્ષોનો અનુભવ') },
+                { value: '5000+', label: t('Patients Treated', 'દર્દીઓની સારવાર') },
+                { value: '4.9★', label: t('Patient Rating', 'દર્દી રેટિંગ') },
+              ].map((stat) => (
+                <div key={stat.label}>
+                  <p className="text-2xl sm:text-4xl font-bold font-heading text-primary-400 dark:text-teal-300">{stat.value}</p>
+                  <p className="text-xs sm:text-sm text-gray-300 dark:text-gray-400 mt-1 uppercase tracking-wider font-medium">{stat.label}</p>
                 </div>
-              </div>
+              ))}
             </motion.div>
           </div>
         </div>
+
+        {/* Carousel Indicators */}
+        {heroImages.length > 1 && (
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex gap-4">
+            {heroImages.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentHeroIndex(idx)}
+                className={`group relative h-2 rounded-full transition-all duration-300 ${idx === currentHeroIndex ? 'bg-primary-500 w-12' : 'bg-white/30 w-3 hover:bg-white/60'}`}
+                aria-label={`Go to slide ${idx + 1}`}
+              >
+                <div className="absolute -inset-2 rounded-full z-0 group-hover:bg-white/5" />
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+          className="absolute bottom-10 right-10 z-30 hidden lg:flex flex-col items-center gap-3"
+        >
+          <div className="w-px h-12 bg-gradient-to-b from-white/0 via-white/40 to-white/0" />
+          <span className="text-[10px] text-white/40 uppercase tracking-[0.2em] [writing-mode:vertical-lr]">Scroll</span>
+        </motion.div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* ═══ SERVICES SECTION ═══ */}
-      {/* ═══════════════════════════════════════════ */}
-      <section className="section-padding bg-white dark:bg-dark-surface">
+      {/* ─── REST OF THE SECTIONS ─── */}
+
+      {/* Services Section */}
+      <section className="section-padding bg-white dark:bg-dark-surface pt-24">
         <div className="max-w-7xl mx-auto">
           <FadeIn className="text-center mb-12 md:mb-16">
             <p className="text-sm font-semibold text-primary-500 dark:text-teal-300 uppercase tracking-wider mb-3">
@@ -341,9 +365,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* ═══ WHY HOMEOPATHY ═══ */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* Why Homeopathy Section */}
       <section className="section-padding bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto">
           <FadeIn className="text-center mb-12 md:mb-16">
@@ -408,9 +430,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* ═══ CONDITIONS WE TREAT ═══ */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* Specializations Section */}
       <section className="section-padding bg-white dark:bg-dark-surface">
         <div className="max-w-7xl mx-auto">
           <FadeIn className="text-center mb-12 md:mb-16">
@@ -439,7 +459,7 @@ export default function HomePage() {
               { icon: '💇', label: t('Hair Loss', 'વાળ ખરવા') },
               { icon: '🧠', label: t('Anxiety & Depression', 'ચિંતા અને ડિપ્રેશન') },
               { icon: '🤕', label: t('Migraine', 'માઇગ્રેન') },
-              { icon: '🩸', label: t('PCOD/PCOS', 'PCOD/PCOS') },
+              { icon: '🤕', label: t('PCOD/PCOS', 'PCOD/PCOS') },
               { icon: '💎', label: t('Kidney Stones', 'કિડની પથરી') },
               { icon: '🛡️', label: t('Autoimmune Disorders', 'ઓટોઇમ્યૂન રોગ') },
             ].map((condition, i) => (
@@ -454,9 +474,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* ═══ TESTIMONIALS ═══ */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* Testimonials */}
       {testimonials.length > 0 && (
         <section className="section-padding bg-gray-50 dark:bg-dark-bg">
           <div className="max-w-7xl mx-auto">
@@ -473,12 +491,11 @@ export default function HomePage() {
               {testimonials.slice(0, 3).map((item, i) => (
                 <FadeIn key={item.id} delay={i * 0.1}>
                   <div className="card h-full flex flex-col">
-                    {/* Quote mark */}
                     <svg className="w-8 h-8 text-primary-200 dark:text-teal-300/20 mb-3" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10H14.017zM0 21v-7.391c0-5.704 3.731-9.57 8.983-10.609L9.978 5.151c-2.432.917-3.995 3.638-3.995 5.849H10v10H0z" />
                     </svg>
                     <div className="mb-3">{renderStars(item.rating)}</div>
-                    <span className="inline-block self-start bg-primary-50 dark:bg-teal-300/10 text-primary-700 dark:text-teal-300 text-xs font-medium px-3 py-1 rounded-full mb-3">
+                    <span className="inline-block self-start bg-primary-50 dark:bg-teal-300/10 text-primary-700 dark:text-teal-300 text-xs font-medium px-3 py-1 rounded-full mb-3 text-center">
                       {item.treatment_description}
                     </span>
                     {item.testimonial_text && (
@@ -511,9 +528,7 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* ═══ HOW IT WORKS ═══ */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* How it Works Section */}
       <section className="section-padding bg-white dark:bg-dark-surface">
         <div className="max-w-7xl mx-auto">
           <FadeIn className="text-center mb-12 md:mb-16">
@@ -530,7 +545,7 @@ export default function HomePage() {
               {
                 step: '1',
                 icon: (
-                    <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 ),
@@ -540,7 +555,7 @@ export default function HomePage() {
               {
                 step: '2',
                 icon: (
-                    <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 ),
@@ -550,7 +565,7 @@ export default function HomePage() {
               {
                 step: '3',
                 icon: (
-                    <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 ),
@@ -560,7 +575,7 @@ export default function HomePage() {
               {
                 step: '4',
                 icon: (
-                    <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <svg className="w-7 h-7 text-primary-500 dark:text-teal-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                 ),
@@ -570,7 +585,6 @@ export default function HomePage() {
             ].map((item, i) => (
               <FadeIn key={i} delay={i * 0.1}>
                 <div className="text-center relative group">
-                  {/* Connector line */}
                   {i < 3 && (
                     <div className="hidden lg:block absolute top-10 left-[60%] w-[80%] border-t-2 border-dashed border-primary-200 dark:border-dark-border/50" />
                   )}
@@ -582,7 +596,7 @@ export default function HomePage() {
                       {item.step}
                     </div>
                   </div>
-                  <h3 className="font-bold font-heading text-gray-900 dark:text-white mb-2 text-lg">{item.title}</h3>
+                  <h3 className="font-bold font-heading text-gray-900 dark:text-white mb-2 text-lg uppercase">{item.title}</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{item.desc}</p>
                 </div>
               </FadeIn>
@@ -591,13 +605,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════ */}
-      {/* ═══ CTA SECTION ═══ */}
-      {/* ═══════════════════════════════════════════ */}
+      {/* CTA Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 dark:from-dark-surface dark:via-dark-bg dark:to-navy" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.08),transparent)]" />
-
         <div className="relative z-10 max-w-4xl mx-auto text-center section-padding">
           <FadeIn>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-heading text-white mb-6 tracking-tight">

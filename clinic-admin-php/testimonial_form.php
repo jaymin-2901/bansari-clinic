@@ -221,7 +221,7 @@ $cropModal = '
 ';
 
 
-$uploadDir = dirname(__DIR__) . '/public/uploads/testimonials/';
+$uploadDir = dirname(__DIR__) . '/uploads/testimonials/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
 $id = (int)($_GET['id'] ?? 0);
@@ -438,7 +438,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <label class="form-label" id="beforeImageLabel">Before Image</label>
                 <?php if ($data['before_image']): ?>
                 <div class="mb-2" id="beforePreview">
-                    <img src="../public/uploads/testimonials/<?= clean($data['before_image']) ?>" class="img-preview" alt="Before">
+                    <img src="/uploads/testimonials/<?= clean($data['before_image']) ?>" class="img-preview" alt="Before">
                     <small class="d-block text-muted mt-1">Current image (upload new to replace)</small>
                 </div>
                 <?php else: ?>
@@ -453,7 +453,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <label class="form-label" id="afterImageLabel">After Image</label>
                 <?php if ($data['after_image']): ?>
                 <div class="mb-2" id="afterPreview">
-                    <img src="../public/uploads/testimonials/<?= clean($data['after_image']) ?>" class="img-preview" alt="After">
+                    <img src="/uploads/testimonials/<?= clean($data['after_image']) ?>" class="img-preview" alt="After">
                     <small class="d-block text-muted mt-1">Current image (upload new to replace)</small>
                 </div>
                 <?php else: ?>

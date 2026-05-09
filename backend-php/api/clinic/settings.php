@@ -37,8 +37,13 @@ try {
         if ($row['setting_type'] === 'image' && $value) {
             // Don't modify paths that are already full URLs
             if (!str_starts_with($value, 'http')) {
-                // Return full path starting with /uploads/ that getImageUrl can use
-                $value = '/uploads/' . $row['setting_group'] . '/' . $value;
+                // Special case for clinic_logo - use general folder (file location)
+                if ($row['setting_key'] === 'clinic_logo') {
+                    $value = '/uploads/general/' . $value;
+                } else {
+                    // Return full path starting with /uploads/ that getImageUrl can use
+                    $value = '/uploads/' . $row['setting_group'] . '/' . $value;
+                }
             }
         }
         $settings[$row['setting_key']] = $value;

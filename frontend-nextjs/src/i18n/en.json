@@ -30,7 +30,6 @@
     "signup": "Sign Up",
     "or": "or"
   },
-
   "nav": {
     "home": "Home",
     "about": "About Us",
@@ -41,7 +40,6 @@
     "myProfile": "My Profile",
     "adminDashboard": "Admin Dashboard"
   },
-
   "profile": {
     "title": "My Profile",
     "basicInfo": "Basic Information",
@@ -79,7 +77,6 @@
     "clinicVisit": "Clinic Visit",
     "online": "Online"
   },
-
   "step1": {
     "title": "Basic Information",
     "subtitle": "Please fill in your details to book an appointment",
@@ -98,16 +95,15 @@
     "appointmentDate": "Appointment Date",
     "consultationType": "Consultation Type",
     "consultationTypeSubtitle": "Choose how you'd like to consult",
-    "offline": "Offline (Clinic Visit)",
-    "offlineDesc": "Visit the clinic in person. Quick 2-3 min pre-visit form.",
-    "online": "Online (Video Consultation)",
-    "onlineDesc": "Detailed case form for remote consultation.",
+    "offline": "Old Patient",
+    "offlineDesc": "Quick follow-up form for existing patients.",
+    "online": "New Patient",
+    "onlineDesc": "Detailed case form for new patients.",
     "proceed": "Proceed to Form"
   },
-
   "offline": {
-    "title": "Pre-Visit Form",
-    "subtitle": "Quick form before your clinic visit (2-3 minutes)",
+    "title": "Old Patient Form",
+    "subtitle": "Quick follow-up form for existing patients.",
     "chiefComplaint": "Chief Complaint",
     "chiefComplaintPlaceholder": "What problem are you facing?",
     "complaintDuration": "Since how long?",
@@ -133,7 +129,6 @@
     "appointmentConfirmed": "Appointment Confirmed!",
     "appointmentConfirmedMsg": "Your pre-visit form has been submitted. Please visit the clinic on your appointment date."
   },
-
   "online": {
     "title": "Complete Homeopathic Case Form",
     "subtitle": "Please fill this form carefully for your online consultation",
@@ -145,7 +140,6 @@
     "step6": "Declaration",
     "saveDraft": "Save Draft",
     "draftSaved": "Draft saved successfully",
-
     "complaints": {
       "title": "Main Complaints",
       "subtitle": "Add all your current complaints",
@@ -166,7 +160,6 @@
       "associatedSymptoms": "Associated Symptoms",
       "associatedSymptomsPlaceholder": "Any other symptoms along with this"
     },
-
     "pastHistory": {
       "title": "Past Medical History",
       "subtitle": "Select any diseases you have had in the past",
@@ -198,7 +191,6 @@
       "residualSymptoms": "Any residual symptoms?",
       "residualPlaceholder": "Any remaining effects?"
     },
-
     "familyHistory": {
       "title": "Family History",
       "subtitle": "Medical history of your family members",
@@ -218,7 +210,6 @@
       "causeOfDeathPlaceholder": "Leave blank if alive",
       "isAlive": "Is alive?"
     },
-
     "physicalGenerals": {
       "title": "Physical Generals",
       "subtitle": "Your general physical tendencies",
@@ -251,7 +242,6 @@
       "menstrualHistory": "Menstrual History (if applicable)",
       "menstrualPlaceholder": "Regular / Irregular / Painful / Heavy / Scanty"
     },
-
     "mentalProfile": {
       "title": "Mental & Emotional Profile",
       "subtitle": "Please answer honestly for accurate treatment",
@@ -307,7 +297,6 @@
       "ambitious": "Ambitious",
       "indecisive": "Indecisive"
     },
-
     "declaration": {
       "title": "Declaration",
       "subtitle": "Please sign and confirm",
@@ -320,7 +309,6 @@
       "caseSubmittedMsg": "Your detailed case form has been submitted successfully. The doctor will review it before your consultation."
     }
   },
-
   "admin": {
     "dashboard": "Dashboard",
     "patients": "Patients",
@@ -346,7 +334,6 @@
     "noPatients": "No patients found",
     "searchPatients": "Search patients by name or mobile..."
   },
-
   "auth": {
     "loginTitle": "Login to Your Account",
     "signupTitle": "Create Your Account",

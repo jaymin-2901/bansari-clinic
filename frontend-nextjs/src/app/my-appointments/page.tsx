@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/components/AuthContext';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/clinic';
 
@@ -39,19 +40,17 @@ export default function MyAppointmentsPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    const raw = localStorage.getItem('patient');
-    if (!raw) {
-      setIsLoggedIn(false);
-      setLoading(false);
-      return;
+    if (!authLoading) {
+      if (user) {
+        fetchAppointments(user.id);
+      } else {
+        setLoading(false);
+      }
     }
-    setIsLoggedIn(true);
-    const patient = JSON.parse(raw);
-    fetchAppointments(patient.id);
-  }, []);
+  }, [user, authLoading]);
 
   const fetchAppointments = async (patientId: number) => {
     try {
@@ -70,7 +69,7 @@ export default function MyAppointmentsPage() {
   };
 
   /* ── Not logged in ── */
-  if (!loading && !isLoggedIn) {
+  if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg px-4">
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg dark:shadow-2xl dark:border dark:border-dark-border p-8 max-w-md w-full text-center">
@@ -102,7 +101,7 @@ export default function MyAppointmentsPage() {
 
       <section className="section-padding bg-white dark:bg-dark-surface">
         <div className="max-w-5xl mx-auto">
-          {loading ? (
+          {loading || authLoading ? (
             <div className="text-center py-16">
               <div className="inline-block w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
               <p className="text-gray-500 mt-4">Loading appointments...</p>

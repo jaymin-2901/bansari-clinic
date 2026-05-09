@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useAuth } from '@/components/AuthContext';
 
 interface PatientData {
   id: number;
@@ -28,6 +29,7 @@ export default function EditProfileModal({
   onSaved,
 }: EditProfileModalProps) {
   const { t } = useLanguage();
+  const { user, updateUser } = useAuth();
 
   const [form, setForm] = useState({
     full_name: '',
@@ -127,16 +129,13 @@ export default function EditProfileModal({
 
       setSuccess(t('Profile updated successfully!', 'પ્રોફાઈલ સફળતાપૂર્વક અપડેટ થઈ!'));
 
-      // Update localStorage
-      const stored = localStorage.getItem('patient');
-      if (stored) {
-        const current = JSON.parse(stored);
-        const updated = {
-          ...current,
+      // Update global auth context
+      if (user) {
+        updateUser({
+          ...user,
           name: data.patient.full_name,
           mobile: data.patient.mobile,
-        };
-        localStorage.setItem('patient', JSON.stringify(updated));
+        });
       }
 
       // Notify parent

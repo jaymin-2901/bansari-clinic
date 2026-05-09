@@ -1,124 +1,117 @@
 <?php
 /**
- * Bansari Homeopathy – Patient Login API
- * POST: { mobile, password }  OR  { email, password }
- *
- * Returns structured JSON:
- *   success → { success: true, message, patient }
- *   failure → { success: false, type, message }
+ * Bansari Homeopathy – Secure Patient Login API (JWT)
  */
-require_once __DIR__ . '/../../config/clinic_db.php';
-setCORSHeaders();
+require_once __DIR__ . '/../../security/bootstrap.php';
+
+// Apply public security (CORS + headers + strict rate limiting for login)
+SecurityBootstrap::publicEndpoint('login');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    jsonResponse(['success' => false, 'type' => 'method', 'message' => 'Method not allowed'], 405);
+    http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'POST required']);
+    exit;
 }
 
-$data = getJsonInput();
+$input = json_decode(file_get_contents('php://input'), true);
+if (!$input) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Invalid JSON body']);
+    exit;
+}
 
-// ─── Input validation ───
-$password = trim($data['password'] ?? '');
-$mobile   = !empty($data['mobile']) ? preg_replace('/[^0-9+]/', '', $data['mobile']) : null;
-$email    = !empty($data['email']) ? trim($data['email']) : null;
+$email    = trim($input['email'] ?? '');
+$mobile   = trim($input['mobile'] ?? '');
+$password = $input['password'] ?? '';
+$captchaToken = $input['captcha_token'] ?? '';
 
-if (!$mobile && !$email) {
-    jsonResponse(['success' => false, 'type' => 'validation', 'field' => 'identifier', 'message' => 'Please enter your mobile number or email address.'], 400);
+// Validate input
+if (empty($email) && empty($mobile)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Email or mobile is required']);
+    exit;
 }
 if (empty($password)) {
-    jsonResponse(['success' => false, 'type' => 'validation', 'field' => 'password', 'message' => 'Please enter your password.'], 400);
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Password is required']);
+    exit;
 }
-if ($mobile && strlen($mobile) < 10) {
-    jsonResponse(['success' => false, 'type' => 'validation', 'field' => 'mobile', 'message' => 'Please enter a valid mobile number (at least 10 digits).'], 400);
+
+// ─── reCAPTCHA Verification ───
+if (!SecurityBootstrap::verifyCaptcha($captchaToken)) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Security check failed. Please solve CAPTCHA.']);
+    exit;
 }
-if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    jsonResponse(['success' => false, 'type' => 'validation', 'field' => 'email', 'message' => 'Please enter a valid email address.'], 400);
+
+// Clean mobile number
+if (!empty($mobile)) {
+    $mobile = preg_replace('/[^0-9+]/', '', $mobile);
 }
 
 try {
     $db = getClinicDB();
-
-    // Step 1: Find patient by email or mobile (include plain_password for debugging)
-    if ($email) {
-        $stmt = $db->prepare("SELECT id, full_name, mobile, email, password, plain_password, is_registered FROM patients WHERE email = ? LIMIT 1");
+    
+    // Find patient by email or mobile
+    if (!empty($email)) {
+        $stmt = $db->prepare("SELECT id, full_name, email, mobile, password, is_registered FROM patients WHERE email = ? LIMIT 1");
         $stmt->execute([$email]);
     } else {
-        $stmt = $db->prepare("SELECT id, full_name, mobile, email, password, plain_password, is_registered FROM patients WHERE mobile = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT id, full_name, email, mobile, password, is_registered FROM patients WHERE mobile = ? LIMIT 1");
         $stmt->execute([$mobile]);
     }
-    $patient = $stmt->fetch();
-
-    // Step 2: Check if patient exists
-    if (!$patient) {
-        $identifier = $email ? 'email address' : 'mobile number';
-        jsonResponse(['success' => false, 'type' => 'credentials', 'message' => "No account found with this $identifier."], 401);
-    }
-
-    // Step 3: Check if patient is registered
-    if (!$patient['is_registered']) {
-        jsonResponse(['success' => false, 'type' => 'credentials', 'message' => 'This account is not yet registered. Please sign up first.'], 401);
-    }
-
-    // Step 4: Check if password exists
-    if (empty($patient['password'])) {
-        jsonResponse(['success' => false, 'type' => 'credentials', 'message' => 'No password set for this account. Please sign up or contact admin.'], 401);
-    }
-
-    // Step 5: Verify password (bcrypt compare — input first, hash second)
-    $passwordHash = $patient['password'];
-    $plainPassword = $patient['plain_password'] ?? '';
-    error_log("DEBUG LOGIN: mobile=$mobile, stored_hash=$passwordHash, plain_pass=$plainPassword, input_password_length=" . strlen($password));
     
-    // Try normal password verify first
-    $verifyResult = password_verify($password, $passwordHash);
-    
-    // If failed, try with leading space (legacy bug - passwords saved with leading space)
-    if (!$verifyResult && !empty($plainPassword)) {
-        // Try plain password match
-        $verifyResult = ($password === $plainPassword);
-        error_log("DEBUG LOGIN: tried plain password match, result=" . ($verifyResult ? 'true' : 'false'));
-    }
-    
-    // If still failed, try with leading space on plain password
-    if (!$verifyResult && !empty($plainPassword)) {
-        $verifyResult = ($password === $plainPassword) || ($password === ltrim($plainPassword));
-        error_log("DEBUG LOGIN: tried plain password with trim, result=" . ($verifyResult ? 'true' : 'false'));
-    }
-    
-    if (!$verifyResult) {
-        error_log("DEBUG LOGIN: password_verify FAILED for mobile=$mobile");
-        // Return more debug info for troubleshooting
-        jsonResponse([
-            'success' => false, 
-            'type' => 'credentials', 
-            'message' => 'Incorrect password. Please try again.',
-            'debug' => [
-                'input_len' => strlen($password),
-                'hash_prefix' => substr($passwordHash, 0, 20),
-                'mobile_len' => strlen($mobile)
-            ]
-        ], 401);
+    $patient = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$patient || !$patient['is_registered']) {
+        AuditLogger::authFailure('patient_not_found', $email ?: $mobile);
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Invalid credentials or account not registered']);
+        exit;
     }
 
-    // Step 6: Authentication successful — create session
-    session_start();
-    $_SESSION['patient'] = [
-        'id'     => (int)$patient['id'],
-        'name'   => $patient['full_name'],
-        'mobile' => $patient['mobile'],
-    ];
+    // Verify password
+    if (empty($patient['password']) || !password_verify($password, $patient['password'])) {
+        AuditLogger::authFailure('invalid_password', $email ?: $mobile);
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Invalid credentials']);
+        exit;
+    }
 
-    jsonResponse([
-        'success' => true,
-        'message' => 'Login successful',
-        'patient' => [
-            'id'     => (int)$patient['id'],
-            'name'   => $patient['full_name'],
-            'mobile' => $patient['mobile'],
-            'email'  => $patient['email'],
-        ]
+    // Authentication successful — generate JWT tokens
+    $jwt = SecurityBootstrap::getJWT();
+    if ($jwt === null) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'Authentication system not configured']);
+        exit;
+    }
+
+    $userId = (int) $patient['id'];
+    $role = 'patient';
+    $name = $patient['full_name'];
+
+    $tokens = $jwt->generateTokens($userId, $role, [
+        'name'  => $name,
+        'email' => $patient['email'],
+        'mobile' => $patient['mobile']
     ]);
 
-} catch (PDOException $e) {
-    error_log('Patient login DB error: ' . $e->getMessage());
-    jsonResponse(['success' => false, 'type' => 'server', 'message' => 'A server error occurred. Please try again later.'], 500);
+    // Log success
+    AuditLogger::authSuccess($userId, $role);
+
+    echo json_encode(array_merge([
+        'success' => true,
+        'user' => [
+            'id'    => $userId,
+            'name'  => $name,
+            'email' => $patient['email'],
+            'mobile' => $patient['mobile'],
+            'role'  => $role
+        ]
+    ], $tokens));
+
+} catch (Exception $e) {
+    error_log('[Patient Login] Error: ' . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => 'Server error']);
 }

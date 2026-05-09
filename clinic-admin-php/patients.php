@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_SERVER['HTTP_X_REQUESTED_W
         try {
             $db   = getClinicDB();
             $hash = password_hash($newPassword, PASSWORD_BCRYPT);
-            $stmt = $db->prepare("UPDATE patients SET password = ?, plain_password = ?, is_registered = 1 WHERE id = ?");
-            $stmt->execute([$hash, $newPassword, $patientId]);
+            $stmt = $db->prepare("UPDATE patients SET password = ?, is_registered = 1 WHERE id = ?");
+            $stmt->execute([$hash, $patientId]);
 
             if ($stmt->rowCount()) {
                 echo json_encode(['success' => true, 'message' => 'Password has been reset successfully.']);
@@ -135,9 +135,8 @@ try {
     }
 
     // Select specific columns — never load raw password hash into the page
-    // Include plain_password for display (Task 7)
     $sql = "SELECT p.id, p.full_name, p.mobile, p.email, p.age, p.gender, p.city,
-                   p.is_registered, p.created_at, p.updated_at, p.plain_password,
+                   p.is_registered, p.created_at, p.updated_at,
                    IF(p.password IS NOT NULL AND p.password != '', 1, 0) AS has_password
                    $selectExtra 
             FROM patients p 
@@ -177,61 +176,78 @@ require_once __DIR__ . '/includes/header.php';
 require_once __DIR__ . '/includes/sidebar.php';
 ?>
 
-<!-- Filters -->
-<div class="table-container mb-3">
-    <form method="GET" class="row g-2 p-3 align-items-end">
-        <div class="col-md-4">
-            <label class="form-label small fw-semibold">Search</label>
-            <input type="text" name="search" class="form-control form-control-sm" 
-                   value="<?= clean($search) ?>" placeholder="Name, mobile, email, city...">
+    <div class="content-header p-4 mb-4 bg-white rounded-4 shadow-sm border border-opacity-10">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="mb-1 fw-bold">Patient Management</h4>
+                <p class="text-muted small mb-0">Manage clinic patients, their records, and account settings.</p>
+            </div>
+            <a href="appointments.php" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-lg me-1"></i> Add Patient
+            </a>
         </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-semibold">Gender</label>
-            <select name="gender" class="form-select form-select-sm">
-                <option value="">All</option>
-                <option value="male" <?= $filterGender === 'male' ? 'selected' : '' ?>>Male</option>
-                <option value="female" <?= $filterGender === 'female' ? 'selected' : '' ?>>Female</option>
-                <option value="other" <?= $filterGender === 'other' ? 'selected' : '' ?>>Other</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <label class="form-label small fw-semibold">Registered</label>
-            <select name="registered" class="form-select form-select-sm">
-                <option value="">All</option>
-                <option value="1" <?= $filterReg === '1' ? 'selected' : '' ?>>Yes</option>
-                <option value="0" <?= $filterReg === '0' ? 'selected' : '' ?>>No</option>
-            </select>
-        </div>
-        <div class="col-md-2">
-            <button class="btn btn-sm btn-success w-100"><i class="bi bi-search"></i> Filter</button>
-        </div>
-        <div class="col-md-2">
-            <a href="patients.php" class="btn btn-sm btn-outline-secondary w-100">Clear</a>
-        </div>
-    </form>
-</div>
 
-<!-- Patients Table -->
-<div class="table-container">
-    <div class="table-header">
-        <h6 class="mb-0 fw-bold"><i class="bi bi-people-fill text-primary me-1"></i> Patients (<?= $pagination['total'] ?>)</h6>
+        <form method="GET" class="p-3 rounded-3" style="background: var(--bg-light);">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label small fw-bold text-muted">Search Patients</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Name, mobile or city..." value="<?= clean($search) ?>">
+                    </div>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold text-muted">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="">All Genders</option>
+                        <option value="male" <?= $filterGender === 'male' ? 'selected' : '' ?>>Male</option>
+                        <option value="female" <?= $filterGender === 'female' ? 'selected' : '' ?>>Female</option>
+                        <option value="other" <?= $filterGender === 'other' ? 'selected' : '' ?>>Other</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-2">
+                    <label class="form-label small fw-bold text-muted">Account Type</label>
+                    <select name="registered" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="1" <?= $filterReg === '1' ? 'selected' : '' ?>>Registered</option>
+                        <option value="0" <?= $filterReg === '0' ? 'selected' : '' ?>>Guest</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="d-flex gap-2 justify-content-md-end">
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                            <i class="bi bi-funnel-fill me-1"></i> Filter
+                        </button>
+                        <?php if ($search || $filterGender || $filterReg): ?>
+                        <a href="patients.php" class="btn btn-outline-secondary px-3">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
+
+    <!-- Patients Table Card -->
+    <div class="table-container bg-white rounded-4 shadow-sm border border-opacity-10 overflow-hidden">
+        <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center bg-light bg-opacity-50">
+            <h6 class="mb-0 fw-bold border-start border-primary border-4 ps-2">
+                Total Patients <span class="badge bg-primary bg-opacity-10 text-primary ms-2"><?= $pagination['total'] ?></span>
+            </h6>
+        </div>
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th>#</th>
-                    <th><?= sortLink('full_name', 'Name') ?></th>
-                    <th><?= sortLink('mobile', 'Mobile') ?></th>
-                    <th>Email</th>
-                    <th><?= sortLink('age', 'Age') ?></th>
-                    <th><?= sortLink('gender', 'Gender') ?></th>
-                    <th><?= sortLink('city', 'City') ?></th>
-                    <th>Registered</th>
-                    <th>Password</th>
-                    <th><?= sortLink('appointments', 'Appts') ?></th>
-                    <th><?= sortLink('created_at', 'Joined') ?></th>
-                    <th>Actions</th>
+                    <th width="50">#</th>
+                    <th><?= sortLink('full_name', 'Patient Details') ?></th>
+                    <th>Contact Info</th>
+                    <th><?= sortLink('age', 'Age/Gender') ?></th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Medical Info</th>
+                    <th class="text-end">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -242,79 +258,85 @@ require_once __DIR__ . '/includes/sidebar.php';
                 $offset = $pagination['offset'];
                 foreach ($patients as $i => $p): 
                 ?>
-                <tr>
+                <tr class="clickable-row">
                     <td class="text-muted small"><?= $offset + $i + 1 ?></td>
                     <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="admin-avatar" style="width:32px;height:32px;font-size:0.75rem;">
+                        <div class="patient-info">
+                            <div class="patient-avatar" style="background: hsl(<?= (crc32($p['full_name']) % 360) ?>, 70%, 45%);">
                                 <?= strtoupper(substr($p['full_name'], 0, 1)) ?>
                             </div>
-                            <span class="fw-semibold"><?= clean($p['full_name']) ?></span>
+                            <div class="patient-meta">
+                                <h6 class="patient-name"><?= clean($p['full_name']) ?></h6>
+                                <span class="patient-sub text-muted mt-1">Joined <?= formatDate($p['created_at'], 'M Y') ?></span>
+                            </div>
                         </div>
                     </td>
-                    <td><code><?= clean($p['mobile']) ?></code></td>
-                    <td><small class="text-muted"><?= $p['email'] ? clean($p['email']) : '-' ?></small></td>
-                    <td><?= $p['age'] ?: '-' ?></td>
                     <td>
-                        <?php if ($p['gender']): ?>
-                        <span class="badge bg-<?= $p['gender'] === 'male' ? 'info' : ($p['gender'] === 'female' ? 'pink' : 'secondary') ?> bg-opacity-10 text-<?= $p['gender'] === 'male' ? 'info' : ($p['gender'] === 'female' ? 'danger' : 'secondary') ?>">
-                            <?= ucfirst($p['gender']) ?>
-                        </span>
-                        <?php else: ?>
-                        <span class="text-muted">-</span>
-                        <?php endif; ?>
-                    </td>
-                    <td><?= $p['city'] ? clean($p['city']) : '-' ?></td>
-                    <td>
-                        <?php if ($p['is_registered']): ?>
-                        <span class="badge bg-success bg-opacity-10 text-success"><i class="bi bi-check-circle"></i> Yes</span>
-                        <?php else: ?>
-                        <span class="badge bg-secondary bg-opacity-10 text-secondary">No</span>
-                        <?php endif; ?>
+                        <div class="d-flex flex-column gap-1">
+                            <a href="tel:<?= clean($p['mobile']) ?>" class="text-decoration-none text-dark fw-medium small">
+                                <i class="bi bi-telephone-fill text-muted me-1"></i> <?= clean($p['mobile']) ?>
+                            </a>
+                            <?php if ($p['email']): ?>
+                            <a href="mailto:<?= clean($p['email']) ?>" class="text-decoration-none text-muted smaller">
+                                <i class="bi bi-envelope-fill me-1"></i> <?= clean($p['email']) ?>
+                            </a>
+                            <?php endif; ?>
+                        </div>
                     </td>
                     <td>
-                        <?php if ($p['is_registered'] && $p['has_password']): ?>
-                        <div class="d-flex align-items-center gap-1">
-                            <code class="pwd-display" id="pwd-<?= $p['id'] ?>" data-plain="<?= clean($p['plain_password'] ?? '') ?>">••••••••</code>
-                            <button type="button" class="btn btn-sm btn-link text-primary p-0 ms-1 toggle-pwd-btn" 
+                        <div class="d-flex flex-column gap-1">
+                            <span class="fw-medium"><?= $p['age'] ?: '-' ?> yrs</span>
+                            <?php if ($p['gender']): ?>
+                            <span class="badge rounded-pill bg-<?= $p['gender'] === 'male' ? 'primary' : ($p['gender'] === 'female' ? 'danger' : 'secondary') ?> bg-opacity-10 text-<?= $p['gender'] === 'male' ? 'primary' : ($p['gender'] === 'female' ? 'danger' : 'secondary') ?> smaller border border-<?= $p['gender'] === 'male' ? 'primary' : ($p['gender'] === 'female' ? 'danger' : 'secondary') ?> border-opacity-25" style="width: fit-content;">
+                                <?= ucfirst($p['gender']) ?>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="small text-muted"><i class="bi bi-geo-alt-fill me-1"></i> <?= $p['city'] ? clean($p['city']) : 'Not specified' ?></span>
+                    </td>
+                    <td>
+                        <div class="d-flex flex-column gap-2">
+                            <?php if ($p['is_registered']): ?>
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="width: fit-content;">
+                                <i class="bi bi-patch-check-fill me-1"></i> Registered
+                            </span>
+                            <button type="button" class="btn btn-xs btn-outline-warning reset-pwd-btn py-0 px-2 fw-medium" 
+                                    style="font-size: 0.7rem; width: fit-content;"
                                     data-patient-id="<?= $p['id'] ?>" 
-                                    title="Show/Hide Password">
-                                <i class="bi bi-eye"></i>
+                                    data-patient-name="<?= clean($p['full_name']) ?>">
+                                <i class="bi bi-key-fill me-1"></i>Reset Pwd
                             </button>
+                            <?php else: ?>
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25" style="width: fit-content;">
+                                Guest
+                            </span>
+                            <?php endif; ?>
                         </div>
-                        <?php elseif ($p['is_registered']): ?>
-                        <div class="d-flex align-items-center gap-1">
-                            <span class="badge bg-warning bg-opacity-10 text-warning"><i class="bi bi-exclamation-triangle"></i> Not set</span>
-                            <button type="button" class="btn btn-sm btn-link text-warning p-0 ms-1 reset-pwd-btn" 
-                                    data-patient-id="<?= $p['id'] ?>" 
-                                    data-patient-name="<?= clean($p['full_name']) ?>" 
-                                    title="Set Password">
-                                <i class="bi bi-key"></i>
-                            </button>
-                        </div>
-                        <?php else: ?>
-                        <span class="text-muted">—</span>
-                        <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($p['appt_count'] > 0): ?>
-                        <a href="appointments.php?search=<?= urlencode($p['mobile']) ?>" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none">
-                            <?= $p['appt_count'] ?> <i class="bi bi-arrow-right"></i>
-                        </a>
-                        <?php else: ?>
-                        <span class="text-muted">0</span>
-                        <?php endif; ?>
+                        <div class="d-flex flex-column gap-1">
+                            <a href="appointments.php?search=<?= urlencode($p['mobile']) ?>" class="badge bg-primary bg-opacity-10 text-primary text-decoration-none border border-primary border-opacity-25" style="width: fit-content;">
+                                <?= $p['appt_count'] ?> Appts <i class="bi bi-arrow-right ms-1"></i>
+                            </a>
+                            <span class="smaller text-muted">Latest: <?= formatDate($p['created_at'], 'd M') ?></span>
+                        </div>
                     </td>
-                    <td><small><?= formatDate($p['created_at'], 'd M Y') ?></small></td>
                     <td>
-                        <form method="POST" class="d-inline">
-                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
-                            <input type="hidden" name="patient_id" value="<?= $p['id'] ?>">
-                            <input type="hidden" name="action" value="delete">
-                            <button class="btn btn-sm btn-action btn-outline-danger" data-confirm="Delete patient '<?= clean($p['full_name']) ?>'? All their appointments will also be deleted." title="Delete">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="appointments.php?search=<?= urlencode($p['mobile']) ?>" class="btn btn-sm btn-outline-primary" title="View Appointments">
+                                <i class="bi bi-calendar-event"></i>
+                            </a>
+                            <form method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                <input type="hidden" name="patient_id" value="<?= $p['id'] ?>">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-sm btn-outline-danger" data-confirm="Delete patient '<?= clean($p['full_name']) ?>'? All their appointments will also be deleted." title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -522,12 +544,6 @@ require_once __DIR__ . '/includes/sidebar.php';
             if (data.success) {
                 modal.hide();
                 showToast(data.message, 'success');
-                // Update the mask display for this patient
-                const maskEl = document.getElementById('pwd-' + resetPatientId.value);
-                if (maskEl) {
-                    maskEl.textContent = '••••••••';
-                    maskEl.dataset.plain = newPwd;
-                }
             } else {
                 resetPwdErr.textContent = data.message;
                 resetPwdErr.style.display = 'block';

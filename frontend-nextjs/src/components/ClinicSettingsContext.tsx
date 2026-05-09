@@ -1,7 +1,15 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import { fetchSettings, getImageUrl } from '@/lib/api';
+import { fetchSettings, getImageUrl, fetchClinicStatus } from '@/lib/api';
+
+interface ClinicStatus {
+  closed: boolean;
+  message: string;
+  start?: string;
+  end?: string;
+  is_open: boolean;
+}
 
 interface ClinicSettings {
   clinic_name?: string;
@@ -24,6 +32,7 @@ interface ClinicSettingsContextType {
   clinicLogo: string | null;
   clinicTagline: string;
   doctorName: string;
+  clinicStatus: ClinicStatus;
   refreshSettings: () => Promise<void>;
 }
 
@@ -33,31 +42,38 @@ const defaultSettings: ClinicSettings = {
   about_doctor_name: 'Dr. Bansari Patel',
 };
 
+const defaultStatus: ClinicStatus = {
+  closed: false,
+  message: '',
+  is_open: true,
+};
+
 const ClinicSettingsContext = createContext<ClinicSettingsContextType | undefined>(undefined);
 
 export function ClinicSettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<ClinicSettings>(defaultSettings);
+  const [clinicStatus, setClinicStatus] = useState<ClinicStatus>(defaultStatus);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout>();
 
   const refreshSettings = async () => {
     try {
-      // Fetch general settings (includes clinic_name, clinic_logo, clinic_tagline)
-      const generalSettings = await fetchSettings('general');
-      // Fetch about settings (includes about_doctor_name)
-      const aboutSettings = await fetchSettings('about');
-      // Fetch contact settings (includes phone, email, address, whatsapp, hours)
-      const contactSettings = await fetchSettings('contact');
+      const [general, about, contact, status] = await Promise.all([
+        fetchSettings('general'),
+        fetchSettings('about'),
+        fetchSettings('contact'),
+        fetchClinicStatus(),
+      ]);
 
-      // Merge all settings
       const merged = {
         ...defaultSettings,
-        ...generalSettings,
-        ...aboutSettings,
-        ...contactSettings,
+        ...general,
+        ...about,
+        ...contact,
       };
 
       setSettings(merged);
+      setClinicStatus(status);
     } catch (error) {
       console.error('Failed to fetch clinic settings:', error);
     } finally {
@@ -69,11 +85,11 @@ export function ClinicSettingsProvider({ children }: { children: ReactNode }) {
     refreshSettings();
   }, []);
 
-  // Polling for live updates every 10 seconds
+  // Polling for live updates every 15 seconds
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       refreshSettings();
-    }, 10000);
+    }, 15000);
 
     return () => {
       if (intervalRef.current) {
@@ -87,13 +103,11 @@ export function ClinicSettingsProvider({ children }: { children: ReactNode }) {
   const clinicTagline = settings.clinic_tagline || 'Gentle Healing, Lasting Results';
   const doctorName = settings.about_doctor_name || 'Dr. Bansari Patel';
 
-  // Get full logo URL with cache busting
+  // Get full logo URL
   let clinicLogo: string | null = null;
   if (settings.clinic_logo) {
-    // The API returns path like /uploads/general/filename.jpg
     const logoUrl = getImageUrl(settings.clinic_logo);
     if (logoUrl) {
-      // Add cache busting query parameter
       const timestamp = Date.now();
       clinicLogo = `${logoUrl}${logoUrl.includes('?') ? '&' : '?'}_t=${timestamp}`;
     }
@@ -108,6 +122,7 @@ export function ClinicSettingsProvider({ children }: { children: ReactNode }) {
         clinicLogo,
         clinicTagline,
         doctorName,
+        clinicStatus,
         refreshSettings,
       }}
     >
@@ -123,4 +138,3 @@ export function useClinicSettings() {
   }
   return context;
 }
-

@@ -1,24 +1,26 @@
-// Default backend URL - port 8000 unified
-const DEFAULT_BACKEND_URL = 'http://localhost:8000';
+// Default backend URL - empty string means use current origin (relative paths)
+const DEFAULT_BACKEND_URL = '';
 
 // Use NEXT_PUBLIC_BACKEND_URL for direct browser-to-backend calls
 export function getBackendUrl(): string {
   if (typeof window !== 'undefined') {
     if (process.env.NODE_ENV !== 'production') {
-      return 'http://localhost:8080';
+      // For local development, using empty string makes requests relative to frontend
+      // which are then proxied via next.config.js to the backend.
+      // This is essential for mobile devices on the same network.
+      return '';
     }
 
-    
     const envBackendUrl = (window as any).env?.NEXT_PUBLIC_BACKEND_URL;
     if (envBackendUrl) return envBackendUrl;
-    
+
     if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
-    
+
     return DEFAULT_BACKEND_URL;
   }
-  
+
   if (process.env.NODE_ENV !== 'production') {
-    return 'http://localhost:8080';
+    return '';
   }
   if (process.env.NEXT_PUBLIC_BACKEND_URL) return process.env.NEXT_PUBLIC_BACKEND_URL;
   return DEFAULT_BACKEND_URL;
@@ -33,6 +35,27 @@ export const API_URL = getBackendUrl() + API_PATH;
 export function logApiError(context: string, error: unknown) {
   console.error(`[API Error] ${context}:`, error);
   console.error(`[API Error] Backend URL: ${API_URL}`);
+}
+
+/**
+ * Fetch with Authorization header
+ */
+export async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  } as Record<string, string>;
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+  });
 }
 
 /* Settings */
@@ -116,10 +139,10 @@ export async function fetchAvailableSlots(date: string, patientId?: number) {
 }
 
 /* Patient Auth */
-export async function loginPatient(data: { mobile?: string; email?: string; password: string }) {
-  const url = `${API_URL}/login.php`;
+export async function loginPatient(data: { mobile?: string; email?: string; password: string; captcha_token?: string }) {
+  const url = `${API_URL}/login.php`; // Updated path
   console.log('[Login] URL:', url);
-  
+
   try {
     const res = await fetch(url, {
       method: 'POST',
@@ -127,17 +150,35 @@ export async function loginPatient(data: { mobile?: string; email?: string; pass
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    
+
     if (!res.ok) {
-      const errorText = await res.text();
-      throw new Error(`HTTP ${res.status}: ${errorText}`);
+      const errorData = await res.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || `HTTP ${res.status}`);
     }
-    
+
     return await res.json();
   } catch (error) {
     logApiError('loginPatient', error);
     throw error;
   }
+}
+
+export async function forgotPassword(email: string, captchaToken: string) {
+  const res = await fetch(`${API_URL}/forgot_password.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, captcha_token: captchaToken }),
+  });
+  return res.json();
+}
+
+export async function resetPassword(data: { token: string; password: string }) {
+  const res = await fetch(`${API_URL}/reset_password.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  return res.json();
 }
 
 export async function signupPatient(data: Record<string, any>) {
@@ -149,10 +190,19 @@ export async function signupPatient(data: Record<string, any>) {
   return res.json();
 }
 
+export async function refreshToken(token: string) {
+  const res = await fetch(`${API_URL}/refresh.php`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: token }),
+  });
+  return res.json();
+}
+
 /* My Appointments */
-export async function fetchMyAppointments(patientId: number) {
+export async function fetchMyAppointments() {
   try {
-    const res = await fetch(`${API_URL}/my_appointments.php?patient_id=${patientId}`);
+    const res = await fetchWithAuth(`${API_URL}/my_appointments.php`);
     const json = await res.json();
     return json.data || [];
   } catch {
@@ -164,15 +214,17 @@ export async function fetchMyAppointments(patientId: number) {
 export function getImageUrl(path: string | null): string | null {
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  
-  const cleanPath = path.replace(/\\+/g, '/');
-  
+
+  // Ensure path starts with /
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
   if (process.env.NODE_ENV === 'production') {
-    return `${getBackendUrl()}${cleanPath.startsWith('/') ? '' : '/'}${cleanPath}`;
+    return `${getBackendUrl()}${normalizedPath}`;
   }
-  
-// Dev: Keep leading slash for rewrite, Apache port 80
-  return `http://localhost${cleanPath}`;
+
+  // Dev: Use relative path so it goes through Next.js proxy
+  // This is essential for mobile devices to see images
+  return normalizedPath;
 }
 
 /* Clinic Images (random fallback) */
@@ -202,9 +254,8 @@ export async function fetchClinicImages() {
 
 /* Upload Cropped */
 export async function uploadCroppedImage(imageData: string, prefix = 'img') {
-  const res = await fetch(`${API_URL}/crop_image.php`, {
+  const res = await fetchWithAuth(`${API_URL}/crop_image.php`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       image_data: imageData,
       prefix,
@@ -212,4 +263,42 @@ export async function uploadCroppedImage(imageData: string, prefix = 'img') {
   });
   return res.json();
 }
+/* Clinic Status & Availability */
+export async function fetchClinicStatus() {
+  try {
+    const res = await fetch(`${API_URL}/status.php`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return { closed: false, message: '' };
+    return await res.json();
+  } catch {
+    return { closed: false, message: '' };
+  }
+}
 
+export async function checkBookingAvailability(date: string, time?: string) {
+  try {
+    const res = await fetch(`${API_URL}/check-availability.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, time }),
+    });
+    return await res.json();
+  } catch {
+    return { available: true, message: '' };
+  }
+}
+
+/* Hero Images */
+export async function fetchHeroImages() {
+  try {
+    const res = await fetch(`${API_URL}/hero.php`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data || [];
+  } catch {
+    return [];
+  }
+}

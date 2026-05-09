@@ -12,8 +12,8 @@
  *   Sunday:  Closed
  */
 
-// Load production config for InfinityFree database credentials and CORS
-require_once __DIR__ . '/../../config/production_config.php';
+// Load local clinic config for localhost database
+require_once __DIR__ . '/../../config/clinic_config.php';
 require_once __DIR__ . '/../../config/clinic_db.php';
 setCORSHeaders();
 
@@ -42,6 +42,18 @@ try {
     if ($action === 'available_slots') {
         $date      = $_GET['date'] ?? '';
         $patientId = isset($_GET['patient_id']) ? (int)$_GET['patient_id'] : 0;
+
+        // ── Check global clinic status (Notices/Closures) ──
+        // Check if the clinic is closed for the majority of the day (e.g., at 10 AM)
+        $clinicStatus = getClinicStatus($date . ' 10:00:00');
+        if ($clinicStatus['closed']) {
+            jsonResponse([
+                'success' => true,
+                'slots'   => [],
+                'message' => 'Notice: ' . $clinicStatus['message'],
+                'is_open' => false,
+            ]);
+        }
 
         if (!$date || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             jsonResponse(['error' => 'Valid date (YYYY-MM-DD) is required'], 400);
@@ -99,6 +111,7 @@ try {
         ];
 
         $slots = [];
+        $partialClosureMessage = '';
         foreach ($sessions as $session) {
             $openSec  = strtotime($session['open']);
             $closeSec = strtotime($session['close']);
@@ -106,15 +119,26 @@ try {
 
             while ($current + $durationSec <= $closeSec) {
                 $timeStr = date('H:i', $current);
+                $fullTimeStr = "$date $timeStr:00";
+                
                 $isBooked = in_array($timeStr, $bookedSet);
                 $isPast   = ($isToday && $current < $nowSec);
+                
+                // Check if this specific slot is within a custom closure
+                $slotStatus = getClinicStatus($fullTimeStr);
+                $isClosed = $slotStatus['closed'];
+                if ($isClosed && !$partialClosureMessage) {
+                    $partialClosureMessage = $slotStatus['message'];
+                }
 
                 $slots[] = [
                     'time'      => $timeStr,
                     'display'   => date('g:i A', $current),
-                    'available' => !$isBooked && !$isPast,
+                    'available' => !$isBooked && !$isPast && !$isClosed,
                     'booked'    => $isBooked,
                     'past'      => $isPast,
+                    'closed'    => $isClosed,
+                    'message'   => $isClosed ? $slotStatus['message'] : null,
                     'session'   => $session['label'],
                 ];
 
@@ -128,6 +152,7 @@ try {
             'patient_type' => $patientType,
             'duration'     => $duration,
             'is_open'      => true,
+            'notice'       => $partialClosureMessage,
             'schedule'     => [
                 'morning' => CLINIC_MORNING_OPEN . ' – ' . CLINIC_MORNING_CLOSE,
                 'evening' => CLINIC_EVENING_OPEN . ' – ' . CLINIC_EVENING_CLOSE,

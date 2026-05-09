@@ -3,17 +3,25 @@
  * Bansari Homeopathy – My Appointments API
  * GET: ?patient_id=123  → returns appointments for that patient
  */
-require_once __DIR__ . '/../../config/clinic_db.php';
-setCORSHeaders();
+require_once __DIR__ . '/../../security/bootstrap.php';
+
+// Require authentication
+$user = SecurityBootstrap::authenticatedEndpoint('my_appointments');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     jsonResponse(['error' => 'Method not allowed'], 405);
 }
 
-$patientId = isset($_GET['patient_id']) ? (int) $_GET['patient_id'] : 0;
+// For patients, always use their own ID from the token
+if (($user['role'] ?? 'patient') === 'patient') {
+    $patientId = (int)$user['sub'];
+} else {
+    // Admins/staff can specify a patient_id
+    $patientId = isset($_GET['patient_id']) ? (int) $_GET['patient_id'] : 0;
+}
 
 if ($patientId <= 0) {
-    jsonResponse(['error' => 'Patient ID is required'], 400);
+    jsonResponse(['error' => 'Unauthorized or invalid patient ID'], 401);
 }
 
 // Verify the patient exists before returning data

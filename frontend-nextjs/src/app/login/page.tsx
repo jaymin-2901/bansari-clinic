@@ -6,6 +6,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/LanguageContext';
 import { loginPatient } from '@/lib/api';
 import { useClinicSettings } from '@/components/ClinicSettingsContext';
+import { useAuth } from '@/components/AuthContext';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 /* ── Eye icon SVGs ── */
 function EyeIcon() {
@@ -31,9 +33,11 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { login } = useAuth();
   
   // Get dynamic clinic settings
   const { clinicName, clinicLogo } = useClinicSettings();
@@ -65,9 +69,17 @@ function LoginForm() {
       }
     }
 
+    if (!captchaToken) {
+      setError('Please solve the CAPTCHA.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const body: { mobile?: string; email?: string; password: string } = { password };
+      const body: { mobile?: string; email?: string; password: string; captcha_token: string } = { 
+        password, 
+        captcha_token: captchaToken 
+      };
       if (isEmail) {
         body.email = identifier;
       } else {
@@ -77,8 +89,11 @@ function LoginForm() {
       const data = await loginPatient(body);
       if (!data.success) {
         setError(data.message || 'Login failed. Please try again.');
+        setCaptchaToken(null);
       } else {
-        localStorage.setItem('patient', JSON.stringify(data.patient));
+        // Use AuthContext to handle login and token storage
+        login(data.user, data.access_token, data.refresh_token);
+        
         // Redirect to returnUrl or default to book-appointment
         window.location.href = returnUrl;
       }
@@ -152,6 +167,19 @@ function LoginForm() {
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
+            <div className="mt-2 text-right">
+              <Link href="/forgot-password" className="text-sm text-primary-600 dark:text-dark-accent hover:underline font-medium">
+                {t('Forgot Password?', 'પાસવર્ડ ભૂલી ગયા?')}
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex justify-center py-2">
+            <ReCAPTCHA
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
+              onChange={(token) => setCaptchaToken(token)}
+              theme="light"
+            />
           </div>
 
           <button

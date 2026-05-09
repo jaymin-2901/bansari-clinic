@@ -2,14 +2,24 @@
 /**
  * Bansari Homeopathy Clinic – Database Connection (PDO)
  * 
- * This file ALWAYS loads production_config.php to ensure the InfinityFree
- * database credentials are used for production deployments.
+ * This file loads the appropriate config based on environment:
+ * - Local development: uses clinic_config.php (localhost database)
+ * - Production (InfinityFree): uses production_config.php
  * 
- * For local development, use clinic_config.php directly or configure
- * environment variables to override the production settings.
+ * Set environment variable USE_PRODUCTION=true to force production config
+ * or it will automatically use clinic_config for local development.
  */
 
-require_once __DIR__ . '/production_config.php';
+$useProduction = getenv('USE_PRODUCTION') === 'true';
+
+if ($useProduction && file_exists(__DIR__ . '/production_config.php')) {
+    require_once __DIR__ . '/production_config.php';
+} elseif (file_exists(__DIR__ . '/clinic_config.php')) {
+    // Load clinic_config for local development (localhost database)
+    require_once __DIR__ . '/clinic_config.php';
+} else {
+    require_once __DIR__ . '/config.php';
+}
 
 function getClinicDB(): PDO
 {
@@ -29,28 +39,28 @@ function getClinicDB(): PDO
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         return $pdo;
-    } catch (PDOException $e) {
-        // MySQL failed, try SQLite fallback
-        $sqlitePath = dirname(__DIR__, 2) . '/database.sqlite';
+    } catch (Throwable $e) {
+        // Log the actual error
+        error_log("Database connection failed: " . $e->getMessage());
         
-        if (file_exists($sqlitePath)) {
-            try {
-                $sqliteDsn = 'sqlite:' . $sqlitePath;
-                $pdo = new PDO($sqliteDsn);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-                return $pdo;
-            } catch (PDOException $sqliteErr) {
-                error_log("Database connection failed (both MySQL and SQLite): " . $e->getMessage());
-                http_response_code(500);
-                echo json_encode(['error' => 'Database connection failed']);
-                exit;
+        // Try SQLite fallback only if it's a PDOException
+        if ($e instanceof PDOException) {
+            $sqlitePath = dirname(__DIR__, 2) . '/database.sqlite';
+            if (file_exists($sqlitePath)) {
+                try {
+                    $sqliteDsn = 'sqlite:' . $sqlitePath;
+                    $pdo = new PDO($sqliteDsn);
+                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+                    return $pdo;
+                } catch (PDOException $sqliteErr) {
+                    error_log("Database connection failed (both MySQL and SQLite): " . $sqliteErr->getMessage());
+                }
             }
         }
         
-        error_log("Database connection failed: " . $e->getMessage());
         http_response_code(500);
-        echo json_encode(['error' => 'Database connection failed']);
+        echo json_encode(['error' => 'Database connection failed: ' . $e->getMessage()]);
         exit;
     }
 }
@@ -87,6 +97,7 @@ function setCORSHeaders(): void
 
     // Fallback: use FRONTEND_URL (backward compatibility)
     $allowed = defined('FRONTEND_URL') ? FRONTEND_URL : 'http://localhost:3000';
+    
     header('Access-Control-Allow-Origin: ' . $allowed);
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Authorization');
@@ -137,4 +148,37 @@ function validateRequired(array $data, array $fields): ?string
 function sanitize(string $input): string
 {
     return htmlspecialchars(trim($input), ENT_QUOTES, 'UTF-8');
+}
+/**
+ * Get current clinic status or status for a specific date/time
+ */
+function getClinicStatus(?string $checkDateTime = null): array
+{
+    try {
+        $db = getClinicDB();
+        $targetTime = $checkDateTime ?: date('Y-m-d H:i:s');
+        
+        // Find if there's any active record for this specific time
+        $stmt = $db->prepare("SELECT message, status, start_datetime, end_datetime 
+                               FROM clinic_status 
+                               WHERE is_active = 1 
+                               AND ? BETWEEN start_datetime AND end_datetime
+                               ORDER BY created_at DESC LIMIT 1");
+        $stmt->execute([$targetTime]);
+        $result = $stmt->fetch();
+        
+        if ($result) {
+            return [
+                'closed' => ($result['status'] === 'closed'),
+                'status' => $result['status'],
+                'message' => $result['message'],
+                'start' => $result['start_datetime'],
+                'end' => $result['end_datetime']
+            ];
+        }
+    } catch (Exception $e) {
+        error_log("Clinic status check error: " . $e->getMessage());
+    }
+    
+    return ['closed' => false, 'message' => '', 'status' => 'open'];
 }

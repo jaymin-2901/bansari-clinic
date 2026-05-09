@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
 import { ClinicSettingsProvider } from '@/components/ClinicSettingsContext';
+import NoticeBanner from '@/components/NoticeBanner';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className={`${openSans.className} antialiased bg-white dark:bg-dark-bg text-gray-900 dark:text-gray-200 transition-colors duration-500`}>
         <Providers>
           <ClinicSettingsProvider>
+            <NoticeBanner />
             <Navbar />
             <main className="min-h-screen">{children}</main>
             <Footer />

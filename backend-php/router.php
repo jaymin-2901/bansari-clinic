@@ -1,88 +1,98 @@
 <?php
 /**
- * PHP Built-in Server Router
- * Routes /uploads/* requests to the public/uploads directory
- * Routes /api/* requests to backend-php/api/
- * Usage: php -S localhost:8000 router.php
- * 
- * For Render.com: php -S 0.0.0.0:$PORT router.php
+ * PHP Built-in Server Router - FIXED for Windows paths
+ * Routes /uploads/* → d:/bansari-homeopathy/uploads/
+ * Routes /api/* → backend-php/api/
  */
 
-// Get PORT from environment (Render.com provides this)
 $PORT = getenv('PORT') ?: 8000;
 
-// Health check endpoint - respond before any processing
+// Health check
 if ($_SERVER['REQUEST_URI'] === '/api/health' || $_SERVER['REQUEST_URI'] === '/health') {
     header('Content-Type: application/json');
-    echo json_encode([
-        'status' => 'Backend running successfully',
-        'timestamp' => time(),
-        'environment' => getenv('APP_ENV') ?: 'development'
-    ]);
+    echo json_encode(['status' => 'OK', 'timestamp' => time()]);
     exit;
 }
+
+// Global Error/Exception Logger
+set_exception_handler(function ($e) {
+    $logFile = __DIR__ . '/logs/api_errors.log';
+    $msg = "[" . date('Y-m-d H:i:s') . "] UNCAUGHT EXCEPTION: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "\n" . $e->getTraceAsString() . "\n";
+    error_log($msg, 3, $logFile);
+    http_response_code(500);
+    echo json_encode(['error' => 'Internal Server Error: ' . $e->getMessage()]);
+    exit;
+});
+
+set_error_handler(function ($severity, $message, $file, $line) {
+    if (!(error_reporting() & $severity)) return;
+    $logFile = __DIR__ . '/logs/api_errors.log';
+    $msg = "[" . date('Y-m-d H:i:s') . "] PHP ERROR ({$severity}): {$message} in {$file} on line {$line}\n";
+    error_log($msg, 3, $logFile);
+    return false; // Let standard error handler run too
+});
 
 $uri = $_SERVER['REQUEST_URI'];
 $path = parse_url($uri, PHP_URL_PATH);
 
-// Serve upload files from public/uploads/
+// **FIXED uploads serving**
 if (str_starts_with($path, '/uploads/')) {
-    $filePath = dirname(__DIR__) . '/public' . $path;
+    $rootDir = realpath(dirname(__DIR__));  // d:/bansari-homeopathy
+    $publicUploadsDir = realpath(__DIR__ . '/public/uploads');
+    $relativePath = substr($path, strlen('/uploads/'));
+    $filePath = $publicUploadsDir . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+    
+    error_log("UPLOAD: '$path' → public symlink '$filePath' exists=" . (file_exists($filePath) ? 'YES' : 'NO'));
+    
+    if (!file_exists($filePath) || !is_file($filePath)) {
+        error_log("Fallback to root uploads");
+        $filePath = $rootDir . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+        error_log("Fallback path: '$filePath' exists=" . (file_exists($filePath) ? 'YES' : 'NO'));
+    }
+    
     if (file_exists($filePath) && is_file($filePath)) {
-        $mimeTypes = [
-            'jpg'  => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'png'  => 'image/png',
-            'webp' => 'image/webp',
-            'gif'  => 'image/gif',
-            'svg' => 'image/svg+xml',
-            'pdf' => 'application/pdf',
-        ];
-        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        $mime = $mimeTypes[$ext] ?? mime_content_type($filePath) ?: 'application/octet-stream';
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $filePath);
+        finfo_close($finfo);
+        
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($filePath));
         header('Cache-Control: public, max-age=86400');
+        header('Access-Control-Allow-Origin: *');
         readfile($filePath);
-        return true;
+        exit;
     }
     http_response_code(404);
-    echo 'File not found';
-    return true;
-}
-
-// Route API requests to backend-php/api/
-if (str_starts_with($path, '/api/')) {
-    // Request: /api/clinic/slots.php -> d:/bansari-homeopathy/backend-php/api/clinic/slots.php
-    // __DIR__ = d:/bansari-homeopathy/backend-php
-    // We need: d:/bansari-homeopathy/backend-php/api/xxx
-    $file = __DIR__ . str_replace('/api/', '/api/', $path);
-    
-    // Debug: log the path
-    error_log("API request: path=$path, file=$file, exists=" . (file_exists($file) ? 'yes' : 'no'));
-    
-    if (file_exists($file) && is_file($file)) {
-        require $file;
-        return true;
-    }
-    http_response_code(404);
-    echo 'API endpoint not found: ' . $file;
-    return true;
-}
-
-// Handle root path "/" - redirect to admin login
-if ($path === '/' || $path === '') {
-    header('Location: /clinic-admin-php/index.php');
+    echo '404 File not found: ' . htmlspecialchars($filePath);
     exit;
 }
 
-// Serve files from clinic-admin-php if they exist
-$docRoot = dirname(__DIR__) . '/clinic-admin-php';
-$file = $docRoot . $path;
-if (file_exists($file) && is_file($file)) {
-    // Let PHP handle the file (default behavior)
-    return false;
+// API routing
+if (str_starts_with($path, '/api/')) {
+    $apiPath = substr($path, strlen('/api'));
+    $apiFile = __DIR__ . '/api' . $apiPath;
+    if (substr($apiPath, -4) !== '.php') {
+        $apiFile .= '.php';
+    }
+    error_log("API REQUEST: " . $_SERVER['REQUEST_METHOD'] . " " . $_SERVER['REQUEST_URI']);
+    $query = $_SERVER['QUERY_STRING'] ?? '';
+    if ($query) error_log("QUERY: " . $query);
+
+    if (file_exists($apiFile)) {
+        error_log("ROUTING TO: " . $apiFile);
+        require $apiFile;
+        exit;
+    }
+    http_response_code(404);
+    echo 'API not found';
+    exit;
 }
 
-// Default: let PHP built-in server handle the request
-return false;
+// Admin redirect
+if ($path === '/' || $path === '') {
+    header('Location: /clinic-admin-php');
+    exit;
+}
+
+return false; // Default PHP server behavior
+

@@ -5,39 +5,83 @@
 
 date_default_timezone_set('Asia/Kolkata');
 
-// ─── Database ───
-define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
-define('DB_PORT', getenv('DB_PORT') ?: '3307');
-define('DB_NAME', getenv('DB_NAME') ?: 'bansari_clinic');
-define('DB_USER', getenv('DB_USER') ?: 'root');
-define('DB_PASS', getenv('DB_PASS') ?: '');
+// ─── Database (Local Development) ───
+if (!defined('DB_HOST')) {
+    define('DB_HOST', '127.0.0.1');
+}
+if (!defined('DB_PORT')) {
+    define('DB_PORT', '3306');
+}
+if (!defined('DB_NAME')) {
+    define('DB_NAME', 'bansari_clinic');
+}
+if (!defined('DB_USER')) {
+    define('DB_USER', 'root');
+}
+if (!defined('DB_PASS')) {
+    define('DB_PASS', '');
+}
 
 // ─── Paths ───
-define('BASE_PATH', dirname(__DIR__, 2));
-define('UPLOAD_PATH', BASE_PATH . '/public/uploads');
-define('TESTIMONIAL_UPLOAD_PATH', UPLOAD_PATH . '/testimonials');
-define('ABOUT_UPLOAD_PATH', UPLOAD_PATH . '/about');
+if (!defined('BASE_PATH')) {
+    define('BASE_PATH', dirname(__DIR__, 2));
+}
+if (!defined('UPLOAD_PATH')) {
+    define('UPLOAD_PATH', BASE_PATH . '/public/uploads');
+}
+if (!defined('TESTIMONIAL_UPLOAD_PATH')) {
+    define('TESTIMONIAL_UPLOAD_PATH', UPLOAD_PATH . '/testimonials');
+}
+if (!defined('ABOUT_UPLOAD_PATH')) {
+    define('ABOUT_UPLOAD_PATH', UPLOAD_PATH . '/about');
+}
+if (!defined('HERO_UPLOAD_PATH')) {
+    define('HERO_UPLOAD_PATH', UPLOAD_PATH . '/hero');
+}
 
 // ─── Upload Settings ───
-define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
-define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
+if (!defined('MAX_FILE_SIZE')) {
+    define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
+}
+if (!defined('ALLOWED_IMAGE_TYPES')) {
+    define('ALLOWED_IMAGE_TYPES', ['image/jpeg', 'image/png', 'image/webp']);
+}
 
 // ─── CORS (for Next.js frontend) ───
-// In production, set this to your Vercel frontend URL
-// You can also set via environment variable FRONTEND_URL or ALLOWED_ORIGINS
-define('FRONTEND_URL', getenv('FRONTEND_URL') ?: 'https://bansari-clinic.vercel.app');
+if (!defined('FRONTEND_URL')) {
+    define('FRONTEND_URL', getenv('FRONTEND_URL') ?: 'http://localhost:3000');
+}
 
 // ─── Clinic Timings (Hardcoded) ───
-define('CLINIC_MORNING_OPEN',  '09:30');
-define('CLINIC_MORNING_CLOSE', '13:00');
-define('CLINIC_EVENING_OPEN',  '17:00');
-define('CLINIC_EVENING_CLOSE', '20:00');
-define('CLINIC_CLOSED_DAY',    0); // 0 = Sunday
-define('NEW_PATIENT_DURATION', 30); // minutes
-define('OLD_PATIENT_DURATION', 15); // minutes
+if (!defined('CLINIC_MORNING_OPEN')) {
+    define('CLINIC_MORNING_OPEN', '09:30');
+}
+if (!defined('CLINIC_MORNING_CLOSE')) {
+    define('CLINIC_MORNING_CLOSE', '13:00');
+}
+if (!defined('CLINIC_EVENING_OPEN')) {
+    define('CLINIC_EVENING_OPEN', '16:30');
+}
+if (!defined('CLINIC_EVENING_CLOSE')) {
+    define('CLINIC_EVENING_CLOSE', '21:00');
+}
+if (!defined('CLINIC_CLOSED_DAYS')) {
+    define('CLINIC_CLOSED_DAYS', [0]); // Sunday
+}
 
-// ─── Logging ───
-define('LOG_DIR', dirname(__DIR__) . '/logs');
-if (!is_dir(LOG_DIR)) {
-    mkdir(LOG_DIR, 0755, true);
+// ─── JWT & Security ───
+if (empty(getenv('JWT_SECRET'))) {
+    putenv('JWT_SECRET=31696e0731f6a960a0f13521577199fd5deb488a45c6967c33922d53becbc315');
+}
+if (empty(getenv('JWT_REFRESH_SECRET'))) {
+    putenv('JWT_REFRESH_SECRET=e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7');
+}
+if (empty(getenv('JWT_ISSUER'))) {
+    putenv('JWT_ISSUER=bansari-homeopathy');
+}
+if (empty(getenv('JWT_AUDIENCE'))) {
+    putenv('JWT_AUDIENCE=bansari-homeopathy-api');
+}
+if (empty(getenv('RECAPTCHA_SECRET'))) {
+    putenv('RECAPTCHA_SECRET=6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe'); // Test secret
 }

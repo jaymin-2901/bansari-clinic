@@ -31,7 +31,7 @@ try {
     $testimonials = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Format image paths consistently for frontend getImageUrl()
-    $baseImagePath = '/public/uploads/testimonials/';
+$baseImagePath = '/uploads/testimonials/';
     foreach ($testimonials as &$testimonial) {
         $testimonial['before_image'] = $testimonial['before_image'] ? $baseImagePath . $testimonial['before_image'] : null;
         $testimonial['after_image'] = $testimonial['after_image'] ? $baseImagePath . $testimonial['after_image'] : null;

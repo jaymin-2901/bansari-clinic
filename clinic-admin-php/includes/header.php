@@ -25,7 +25,13 @@ $extraScripts = $extraScripts ?? '';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Global Reset for all clickable elements to remove potential blue underlines */
+        a, .btn, .nav-link, .clickable-card, .clickable-row, [onclick], [role="button"] {
+            text-decoration: none !important;
+        }
+    </style>
+    <link rel="stylesheet" href="css/style.css?v=1.0.1">
     <script>
         window.ADMIN_API_KEY = '<?= getenv("ADMIN_API_KEY") ?: "your-admin-api-key-here" ?>';
         window.ADMIN_ID = '<?= getAdminId() ?>';

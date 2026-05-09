@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
+import { useAuth } from '@/components/AuthContext';
 import EditProfileModal from '@/components/EditProfileModal';
 
 /* ── Types ── */
@@ -89,32 +90,30 @@ function genderLabel(gender: string | null, t: (en: string, gu: string) => strin
 export default function ProfilePage() {
   const { t } = useLanguage();
 
-  const [patient, setPatient] = useState<PatientProfile | null>(null);
+  const [profileData, setProfileData] = useState<PatientProfile | null>(null);
   const [summary, setSummary] = useState<AppointmentSummary | null>(null);
   const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
-    const raw = localStorage.getItem('patient');
-    if (!raw) {
-      setIsLoggedIn(false);
-      setLoading(false);
-      return;
+    if (!authLoading) {
+      if (user) {
+        fetchProfile(user.id);
+      } else {
+        setLoading(false);
+      }
     }
-    setIsLoggedIn(true);
-    const stored = JSON.parse(raw);
-    fetchProfile(stored.id);
-  }, []);
+  }, [user, authLoading]);
 
   const fetchProfile = async (patientId: number) => {
     try {
       const res = await fetch(`/api/patient/profile?patient_id=${patientId}`);
       const data = await res.json();
       if (data.success) {
-        setPatient(data.patient);
+        setProfileData(data.patient);
         setSummary(data.summary);
         setAppointments(data.appointments || []);
       } else {
@@ -128,7 +127,7 @@ export default function ProfilePage() {
   };
 
   const handleProfileSaved = (updatedPatient: PatientProfile) => {
-    setPatient(updatedPatient);
+    setProfileData(updatedPatient);
     // Re-fetch to get fresh summary data
     if (updatedPatient.id) {
       fetchProfile(updatedPatient.id);
@@ -136,7 +135,7 @@ export default function ProfilePage() {
   };
 
   /* ── Not logged in ── */
-  if (!loading && !isLoggedIn) {
+  if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg px-4">
         <div className="bg-white dark:bg-dark-card rounded-2xl shadow-lg dark:shadow-2xl dark:border dark:border-dark-border p-8 max-w-md w-full text-center">
@@ -165,7 +164,7 @@ export default function ProfilePage() {
   }
 
   /* ── Loading ── */
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
         <div className="flex flex-col items-center gap-3">
@@ -199,7 +198,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!patient) return null;
+  if (!profileData) return null;
 
   const getInitials = (name: string) =>
     name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -215,14 +214,14 @@ export default function ProfilePage() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             {/* Avatar */}
             <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 dark:from-dark-accent dark:to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-2xl">{getInitials(patient.full_name)}</span>
+              <span className="text-white font-bold text-2xl">{getInitials(profileData.full_name)}</span>
             </div>
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-200">
-                {patient.full_name}
+                {profileData.full_name}
               </h1>
               <p className="text-gray-500 dark:text-gray-400 mt-0.5">
-                {patient.email || patient.mobile}
+                {profileData.email || profileData.mobile}
               </p>
             </div>
             <button
@@ -253,13 +252,13 @@ export default function ProfilePage() {
             </h2>
 
             <div className="space-y-4">
-              <InfoRow label={t('Full Name', 'પૂરું નામ')} value={patient.full_name} />
-              <InfoRow label={t('Email', 'ઈમેઇલ')} value={patient.email || '—'} />
-              <InfoRow label={t('Mobile Number', 'મોબાઈલ નંબર')} value={patient.mobile} />
-              <InfoRow label={t('Age', 'ઉંમર')} value={patient.age !== null ? `${patient.age} ${t('years', 'વર્ષ')}` : '—'} />
-              <InfoRow label={t('Gender', 'જાતિ')} value={genderLabel(patient.gender, t)} />
-              <InfoRow label={t('City', 'શહેર')} value={patient.city || '—'} />
-              <InfoRow label={t('Address', 'સરનામું')} value={patient.address || '—'} />
+              <InfoRow label={t('Full Name', 'પૂરું નામ')} value={profileData.full_name} />
+              <InfoRow label={t('Email', 'ઈમેઇલ')} value={profileData.email || '—'} />
+              <InfoRow label={t('Mobile Number', 'મોબાઈલ નંબર')} value={profileData.mobile} />
+              <InfoRow label={t('Age', 'ઉંમર')} value={profileData.age !== null ? `${profileData.age} ${t('years', 'વર્ષ')}` : '—'} />
+              <InfoRow label={t('Gender', 'જાતિ')} value={genderLabel(profileData.gender, t)} />
+              <InfoRow label={t('City', 'શહેર')} value={profileData.city || '—'} />
+              <InfoRow label={t('Address', 'સરનામું')} value={profileData.address || '—'} />
             </div>
           </div>
 
@@ -431,7 +430,7 @@ export default function ProfilePage() {
 
       {/* ── Edit Profile Modal ── */}
       <EditProfileModal
-        patient={patient as any}
+        patient={profileData as any}
         isOpen={editOpen}
         onClose={() => setEditOpen(false)}
         onSaved={handleProfileSaved as any}

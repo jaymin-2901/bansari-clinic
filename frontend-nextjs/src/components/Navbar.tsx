@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useLanguage } from '@/lib/LanguageContext';
 import { useClinicSettings } from '@/components/ClinicSettingsContext';
 import ThemeToggle from '@/components/ThemeToggle';
+import { useAuth } from '@/components/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PatientInfo {
@@ -17,9 +18,9 @@ interface PatientInfo {
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [patient, setPatient] = useState<PatientInfo | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, logout } = useAuth();
   const profileRef = useRef<HTMLDivElement>(null);
   const { lang, setLang, t } = useLanguage();
   const pathname = usePathname();
@@ -28,11 +29,6 @@ export default function Navbar() {
   const { clinicName, clinicLogo, doctorName } = useClinicSettings();
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('patient');
-      if (stored) setPatient(JSON.parse(stored));
-    } catch {}
-
     const handleClickOutside = (e: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
         setProfileOpen(false);
@@ -59,10 +55,8 @@ export default function Navbar() {
   }, [isOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem('patient');
-    setPatient(null);
+    logout();
     setProfileOpen(false);
-    window.location.href = '/';
   };
 
   const closeMobile = useCallback(() => setIsOpen(false), []);
@@ -159,7 +153,7 @@ export default function Navbar() {
               {/* Divider */}
               <div className="w-px h-6 bg-gray-200 dark:bg-dark-border mx-1" />
 
-              {patient ? (
+              {user ? (
                 /* ── Logged-in: Profile Dropdown ── */
                 <div className="relative" ref={profileRef}>
                   <button
@@ -167,10 +161,10 @@ export default function Navbar() {
                     className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-dark-card transition-all border border-gray-200 dark:border-dark-border"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-semibold text-xs">{getInitials(patient.name)}</span>
+                      <span className="text-white font-semibold text-xs">{getInitials(user.name)}</span>
                     </div>
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-200 max-w-[120px] truncate">
-                      {patient.name}
+                      {user.name}
                     </span>
                     <motion.svg
                       animate={{ rotate: profileOpen ? 180 : 0 }}
@@ -196,12 +190,12 @@ export default function Navbar() {
                         <div className="px-4 py-3 border-b border-gray-100 dark:border-dark-border">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-primary-100 dark:bg-dark-accent/20 rounded-xl flex items-center justify-center">
-                              <span className="text-primary-600 dark:text-dark-accent font-bold text-sm">{getInitials(patient.name)}</span>
+                              <span className="text-primary-600 dark:text-dark-accent font-bold text-sm">{getInitials(user.name)}</span>
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-gray-900 dark:text-gray-200 text-sm truncate">{patient.name}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{patient.mobile}</p>
-                              {patient.email && <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{patient.email}</p>}
+                              <p className="font-semibold text-gray-900 dark:text-gray-200 text-sm truncate">{user.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{user.mobile || ''}</p>
+                              {user.email && <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>}
                             </div>
                           </div>
                         </div>
@@ -280,14 +274,14 @@ export default function Navbar() {
               </button>
 
               {/* Profile Icon - RIGHT side (when logged in) */}
-              {patient ? (
+              {user ? (
                 <div className="relative" ref={profileRef}>
                   <button
                     onClick={() => setProfileOpen(!profileOpen)}
                     className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-dark-card transition-all"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center">
-                      <span className="text-white font-semibold text-xs">{getInitials(patient.name)}</span>
+                      <span className="text-white font-semibold text-xs">{getInitials(user.name)}</span>
                     </div>
                   </button>
 
@@ -303,11 +297,11 @@ export default function Navbar() {
                         <div className="px-4 py-3 border-b border-gray-100 dark:border-dark-border">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-primary-100 dark:bg-dark-accent/20 rounded-xl flex items-center justify-center">
-                              <span className="text-primary-600 dark:text-dark-accent font-bold text-sm">{getInitials(patient.name)}</span>
+                              <span className="text-primary-600 dark:text-dark-accent font-bold text-sm">{getInitials(user.name)}</span>
                             </div>
                             <div className="min-w-0">
-                              <p className="font-semibold text-gray-900 dark:text-gray-200 text-sm truncate">{patient.name}</p>
-                              <p className="text-xs text-gray-500 dark:text-gray-400">{patient.mobile}</p>
+                              <p className="font-semibold text-gray-900 dark:text-gray-200 text-sm truncate">{user.name}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{user.mobile || ''}</p>
                             </div>
                           </div>
                         </div>

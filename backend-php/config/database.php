@@ -12,10 +12,17 @@
  *  - Persistent connections disabled (cleaner for cron)
  */
 
-// Load production config if available (for InfinityFree deployment)
-$prodConfig = __DIR__ . '/production_config.php';
-if (file_exists($prodConfig)) {
-    require_once $prodConfig;
+// Load configuration based on environment
+// For local development: use config.php (localhost database)
+// For production (InfinityFree): set USE_PRODUCTION=true in environment or use clinic_config.php
+
+$useProduction = getenv('USE_PRODUCTION') === 'true';
+
+if ($useProduction && file_exists(__DIR__ . '/production_config.php')) {
+    require_once __DIR__ . '/production_config.php';
+} elseif (file_exists(__DIR__ . '/clinic_config.php')) {
+    // Load clinic_config for local development (localhost database)
+    require_once __DIR__ . '/clinic_config.php';
 } else {
     require_once __DIR__ . '/config.php';
 }

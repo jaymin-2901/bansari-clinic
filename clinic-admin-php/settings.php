@@ -9,17 +9,15 @@ requireAdmin();
 
 $pageTitle = 'Settings';
 
-$generalUploadDir = dirname(__DIR__) . '/public/uploads/general/';
-$aboutUploadDir   = dirname(__DIR__) . '/public/uploads/about/';
-$homeUploadDir    = dirname(__DIR__) . '/public/uploads/home/';
-$clinicImagesDir  = dirname(__DIR__) . '/public/uploads/clinic-images/';
+$generalUploadDir = dirname(__DIR__) . '/uploads/general/';
+$aboutUploadDir   = dirname(__DIR__) . '/uploads/about/';
+$homeUploadDir    = dirname(__DIR__) . '/uploads/home/';
 if (!is_dir($generalUploadDir)) mkdir($generalUploadDir, 0755, true);
 if (!is_dir($aboutUploadDir))   mkdir($aboutUploadDir, 0755, true);
 if (!is_dir($homeUploadDir))    mkdir($homeUploadDir, 0755, true);
-if (!is_dir($clinicImagesDir)) mkdir($clinicImagesDir, 0755, true);
 
 $activeTab = $_GET['tab'] ?? 'general';
-if (!in_array($activeTab, ['general', 'home', 'about', 'contact', 'clinic'])) $activeTab = 'general';
+if (!in_array($activeTab, ['general', 'home', 'about', 'contact'])) $activeTab = 'general';
 
 // Handle save
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -66,28 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($fields as $field) {
                     if (isset($_POST[$field])) {
                         $stmt->execute([$field, trim($_POST[$field])]);
-                    }
-                }
-                // Hero image upload (Desktop)
-                if (isset($_FILES['home_hero_image']) && $_FILES['home_hero_image']['error'] === UPLOAD_ERR_OK) {
-                    $filename = uploadImage($_FILES['home_hero_image'], $homeUploadDir, 'hero');
-                    if ($filename) {
-                        $db->prepare("
-                            INSERT INTO website_settings (setting_key, setting_value, setting_type, setting_group) 
-                            VALUES ('home_hero_image', ?, 'image', 'home')
-                            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
-                        ")->execute([$filename]);
-                    }
-                }
-                // Hero image upload (Mobile)
-                if (isset($_FILES['home_hero_image_mobile']) && $_FILES['home_hero_image_mobile']['error'] === UPLOAD_ERR_OK) {
-                    $filename = uploadImage($_FILES['home_hero_image_mobile'], $homeUploadDir, 'hero-mobile');
-                    if ($filename) {
-                        $db->prepare("
-                            INSERT INTO website_settings (setting_key, setting_value, setting_type, setting_group) 
-                            VALUES ('home_hero_image_mobile', ?, 'image', 'home')
-                            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
-                        ")->execute([$filename]);
                     }
                 }
                 setFlash('success', 'Home page settings saved.');
@@ -199,11 +175,6 @@ require_once __DIR__ . '/includes/sidebar.php';
             <i class="bi bi-telephone me-1"></i> Contact
         </a>
     </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $activeTab === 'clinic' ? 'active' : '' ?>" href="?tab=clinic">
-            <i class="bi bi-images me-1"></i> Clinic Images
-        </a>
-    </li>
 </ul>
 
 <!-- ═══ GENERAL TAB ═══ -->
@@ -272,25 +243,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <textarea name="home_hero_description" class="form-control" rows="3"
                           placeholder="Short description shown on the hero banner"><?= clean($settings['home_hero_description'] ?? '') ?></textarea>
             </div>
-            <div class="col-md-6">
-                <label class="form-label">Hero Background Image (Desktop)</label>
-                <?php if (!empty($settings['home_hero_image'])): ?>
-                <div class="mb-2">
-                    <img src="/uploads/home/<?= clean($settings['home_hero_image']) ?>" class="img-preview" alt="Hero Desktop">
-                </div>
-                <?php endif; ?>
-                <input type="file" name="home_hero_image" class="form-control" accept="image/*">
-                <small class="text-muted">Max 5MB. Accepted: JPG, PNG, WebP. Shown on screens wider than 768px.</small>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Hero Background Image (Mobile)</label>
-                <?php if (!empty($settings['home_hero_image_mobile'])): ?>
-                <div class="mb-2">
-                    <img src="/uploads/home/<?= clean($settings['home_hero_image_mobile']) ?>" class="img-preview" alt="Hero Mobile">
-                </div>
-                <?php endif; ?>
-                <input type="file" name="home_hero_image_mobile" class="form-control" accept="image/*">
-                <small class="text-muted">Max 5MB. Accepted: JPG, PNG, WebP. Shown on screens 768px and narrower. If not uploaded, desktop image will be used.</small>
+            <div class="col-12">
             </div>
         </div>
 
@@ -498,7 +451,7 @@ $imageBaseUrl = '/uploads/clinic-images';
                      class="card-img-top" 
                      alt="Clinic Image" 
                      style="height: 200px; object-fit: cover;"
-                     onerror="this.src='/assets/img/placeholder.jpg'">
+                     onerror="this.src='https://placehold.co/600x400?text=Clinic+Image'">
                 <div class="card-body p-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <small class="text-muted"><?= date('d M Y', strtotime($img['created_at'])) ?></small>

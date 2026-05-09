@@ -9,7 +9,7 @@ requireAdmin();
 
 $pageTitle = 'Testimonials';
 
-$uploadDir = dirname(__DIR__) . '/public/uploads/testimonials/';
+$uploadDir = dirname(__DIR__) . '/uploads/testimonials/';
 if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
 
 // Handle delete
@@ -98,10 +98,10 @@ require_once __DIR__ . '/includes/sidebar.php';
                     <td><?= clean(mb_substr($t['treatment_description'], 0, 50)) ?><?= mb_strlen($t['treatment_description']) > 50 ? '...' : '' ?></td>
                     <td>
                         <?php if ($t['before_image']): ?>
-                        <img src="../public/uploads/testimonials/<?= clean($t['before_image']) ?>" class="img-preview" style="width:40px;height:40px;" alt="Before">
+                        <img src="/uploads/testimonials/<?= clean($t['before_image']) ?>" class="img-preview" style="width:40px;height:40px;" alt="Before">
                         <?php endif; ?>
                         <?php if ($t['after_image']): ?>
-                        <img src="../public/uploads/testimonials/<?= clean($t['after_image']) ?>" class="img-preview" style="width:40px;height:40px;" alt="After">
+                        <img src="/uploads/testimonials/<?= clean($t['after_image']) ?>" class="img-preview" style="width:40px;height:40px;" alt="After">
                         <?php endif; ?>
                         <?php if (!$t['before_image'] && !$t['after_image']): ?>
                         <span class="text-muted small">No images</span>

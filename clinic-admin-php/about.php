@@ -115,7 +115,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <label class="form-label">Doctor Photo</label>
                 <?php if (!empty($settings['about_doctor_image'])): ?>
                 <div class="mb-2">
-                    <img src="../uploads/about/<?= clean($settings['about_doctor_image']) ?>" class="img-preview" alt="Doctor">
+                    <img src="/uploads/about/<?= clean($settings['about_doctor_image']) ?>" class="img-preview" alt="Doctor">
                 </div>
                 <?php endif; ?>
                 <input type="file" name="about_doctor_image" class="form-control" accept="image/*">
@@ -149,7 +149,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <label class="form-label">Clinic Image</label>
                 <?php if (!empty($settings['about_clinic_image'])): ?>
                 <div class="mb-2">
-                    <img src="../uploads/about/<?= clean($settings['about_clinic_image']) ?>" class="img-preview" alt="Clinic">
+                    <img src="/uploads/about/<?= clean($settings['about_clinic_image']) ?>" class="img-preview" alt="Clinic">
                 </div>
                 <?php endif; ?>
                 <input type="file" name="about_clinic_image" class="form-control" accept="image/*">

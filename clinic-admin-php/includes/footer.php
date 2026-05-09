@@ -9,12 +9,26 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 // Sidebar toggle for mobile
-document.getElementById('openSidebar')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.add('show');
-});
-document.getElementById('closeSidebar')?.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.remove('show');
-});
+const openSidebar = document.getElementById('openSidebar');
+const closeSidebar = document.getElementById('closeSidebar');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('sidebarOverlay');
+
+function toggleSidebar(show) {
+    if (show) {
+        sidebar?.classList.add('show');
+        overlay?.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    } else {
+        sidebar?.classList.remove('show');
+        overlay?.classList.remove('show');
+        document.body.style.overflow = '';
+    }
+}
+
+openSidebar?.addEventListener('click', () => toggleSidebar(true));
+closeSidebar?.addEventListener('click', () => toggleSidebar(false));
+overlay?.addEventListener('click', () => toggleSidebar(false));
 
 // Delete confirmation
 document.querySelectorAll('[data-confirm]').forEach(el => {

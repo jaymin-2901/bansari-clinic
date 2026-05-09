@@ -36,9 +36,7 @@ clinic-admin-php/
 │   ├── clinic/            # Clinic-specific APIs
 │   ├── export_appointments.php
 │   ├── legal_pages.php
-│   ├── manage_backups.php
 │   ├── notifications.php
-│   ├── restore_backup.php
 │   └── search_appointments.php
 ├── admin/                  # Admin pages (dashboard, patients, etc.)
 ├── includes/               # Shared includes
@@ -231,7 +229,6 @@ The `uploads/` directory is protected with:
 - [ ] Upload folder permissions set ( writable)
 - [ ] SSL certificate installed (for production)
 - [ ] Error logging configured
-- [ ] Backup system in place
 
 ## Support
 

@@ -10,11 +10,10 @@
 // ─── Timezone ───
 date_default_timezone_set('Asia/Kolkata');
 
-// ─── Database Configuration ───
-// Change these values for your hosting environment
+// ─── Database Configuration (Local Development) ───
 define('PF_DB_HOST', 'localhost');
-define('PF_DB_PORT', '3307');       // Default MySQL port is 3306, change if needed
-define('PF_DB_NAME', 'mediconnect');
+define('PF_DB_PORT', '3307');
+define('PF_DB_NAME', 'bansari_clinic');
 define('PF_DB_USER', 'root');
 define('PF_DB_PASS', '');
 
