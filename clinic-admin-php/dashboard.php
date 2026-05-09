@@ -72,7 +72,7 @@ require_once __DIR__ . '/includes/sidebar.php';
 
 <!-- Stats Cards Row -->
 <div class="stats-grid">
-    <div class="stat-card premium">
+    <a href="appointments.php" class="stat-card premium clickable-card">
         <div class="stat-icon-wrapper primary">
             <i class="bi bi-calendar-check"></i>
         </div>
@@ -83,9 +83,9 @@ require_once __DIR__ . '/includes/sidebar.php';
         <div class="stat-trend positive">
             <i class="bi bi-arrow-up"></i> All time
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card premium">
+    <a href="appointments.php?status=pending" class="stat-card premium clickable-card">
         <div class="stat-icon-wrapper warning">
             <i class="bi bi-clock-fill"></i>
         </div>
@@ -96,9 +96,9 @@ require_once __DIR__ . '/includes/sidebar.php';
         <div class="stat-trend neutral">
             Awaiting action
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card premium">
+    <a href="appointments.php?date=<?= date('Y-m-d') ?>" class="stat-card premium clickable-card">
         <div class="stat-icon-wrapper info">
             <i class="bi bi-calendar2-day"></i>
         </div>
@@ -109,9 +109,9 @@ require_once __DIR__ . '/includes/sidebar.php';
         <div class="stat-trend <?= $todayCount > 0 ? 'positive' : 'neutral' ?>">
             <?= $todayCount > 0 ? '<i class="bi bi-check-circle"></i> Scheduled' : 'No appointments' ?>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card premium">
+    <a href="patients.php" class="stat-card premium clickable-card">
         <div class="stat-icon-wrapper success">
             <i class="bi bi-people-fill"></i>
         </div>
@@ -122,12 +122,12 @@ require_once __DIR__ . '/includes/sidebar.php';
         <div class="stat-trend positive">
             <i class="bi bi-arrow-up"></i> +<?= $weekNewPatients ?> this week
         </div>
-    </div>
+    </a>
 </div>
 
 <!-- Secondary Stats Row -->
 <div class="stats-grid secondary">
-    <div class="stat-card compact">
+    <a href="appointments.php?type=offline" class="stat-card compact clickable-card">
         <div class="stat-icon-small offline">
             <i class="bi bi-building"></i>
         </div>
@@ -135,9 +135,9 @@ require_once __DIR__ . '/includes/sidebar.php';
             <span class="stat-value"><?= $offlineCount ?></span>
             <span class="stat-label">Offline Visits</span>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card compact">
+    <a href="appointments.php?type=online" class="stat-card compact clickable-card">
         <div class="stat-icon-small online">
             <i class="bi bi-display"></i>
         </div>
@@ -145,9 +145,9 @@ require_once __DIR__ . '/includes/sidebar.php';
             <span class="stat-value"><?= $onlineCount ?></span>
             <span class="stat-label">Online Consults</span>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card compact">
+    <a href="testimonials.php" class="stat-card compact clickable-card">
         <div class="stat-icon-small testimonial">
             <i class="bi bi-chat-quote"></i>
         </div>
@@ -155,9 +155,9 @@ require_once __DIR__ . '/includes/sidebar.php';
             <span class="stat-value"><?= $totalTestimonials ?></span>
             <span class="stat-label">Active Testimonials</span>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card compact">
+    <a href="messages.php" class="stat-card compact clickable-card">
         <div class="stat-icon-small message">
             <i class="bi bi-envelope"></i>
         </div>
@@ -165,12 +165,12 @@ require_once __DIR__ . '/includes/sidebar.php';
             <span class="stat-value"><?= $unreadMessages ?></span>
             <span class="stat-label">Unread Messages</span>
         </div>
-    </div>
+    </a>
 </div>
 
 <!-- Reminder Stats Row -->
 <div class="stats-grid reminder">
-    <div class="stat-card reminder-card">
+    <a href="followup.php" class="stat-card reminder-card clickable-card">
         <div class="reminder-header">
             <i class="bi bi-bell"></i>
             <span>Reminder System</span>
@@ -193,9 +193,9 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <span class="reminder-label">Confirmed</span>
             </div>
         </div>
-    </div>
+    </a>
 
-    <div class="stat-card weekly-card">
+    <a href="appointments.php" class="stat-card weekly-card clickable-card">
         <div class="weekly-header">
             <i class="bi bi-graph-up"></i>
             <span>This Week</span>
@@ -262,7 +262,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 </td></tr>
                 <?php else: ?>
                 <?php foreach ($recentAppointments as $apt): ?>
-                <tr>
+                <tr class="clickable-row" onclick="window.location.href='appointment_view.php?id=<?= $apt['id'] ?>'">
                     <td><strong>#<?= $apt['id'] ?></strong></td>
                     <td><?= clean($apt['full_name']) ?></td>
                     <td><code><?= clean($apt['mobile']) ?></code></td>

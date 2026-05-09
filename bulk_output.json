@@ -1,0 +1,20 @@
+--- Testing Patient ID: 2 ---
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\CORSHandler.php on line 72
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 31
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 34
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 38
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 41
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 44
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 47
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 48
+
+Warning: Cannot modify header information - headers already sent by (output started at D:\bansari-homeopathy\bulk_test_profile.php:4) in D:\bansari-homeopathy\backend-php\security\SecurityHeaders.php on line 59
+{"success":true,"patient":{"id":2,"full_name":"Ajaybhai chavda","mobile":"9974157344","age":26,"gender":"male","city":"Ahmedabad","email":"ajay27chavda@gmail.com","address":null,"is_registered":1,"created_at":"2026-03-01 11:07:21"},"summary":{"total_appointments":5,"upcoming_count":"2","completed_count":"0","followup_count":"0","next_appointment":null},"appointments":[{"id":22,"appointment_date":"2026-03-09","appointment_time":"09:30:00","consultation_type":"offline","status":"confirmed","confirmation_status":"confirmed","is_followup":0,"followup_done":0,"created_at":"2026-03-07 17:08:57"},{"id":7,"appointment_date":"2026-03-02","appointment_time":"09:30:00","consultation_type":"online","status":"confirmed","confirmation_status":"pending","is_followup":0,"followup_done":1,"created_at":"2026-03-01 13:00:28"},{"id":6,"appointment_date":"2026-03-16","appointment_time":"09:30:00","consultation_type":"offline","status":"pending","confirmation_status":"reminder_sent","is_followup":0,"followup_done":0,"created_at":"2026-03-01 12:34:39"},{"id":5,"appointment_date":"2026-03-02","appointment_time":"10:00:00","consultation_type":"offline","status":"confirmed","confirmation_status":"pending","is_followup":0,"followup_done":1,"created_at":"2026-03-01 12:04:40"},{"id":4,"appointment_date":"2414-04-24","appointment_time":"14:24:00","consultation_type":"offline","status":"confirmed","confirmation_status":"pending","is_followup":0,"followup_done":0,"created_at":"2026-03-01 11:49:33"}]}

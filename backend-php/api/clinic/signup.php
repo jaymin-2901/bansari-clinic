@@ -69,26 +69,34 @@ try {
             in_array($data['gender'] ?? '', ['male', 'female', 'other']) ? $data['gender'] : null,
             $city
         ]);
-        $patientId = $db->lastInsertId();
     }
+    $patientId = $existing ? $existing['id'] : $db->lastInsertId();
 
-    // Start session
-    session_start();
-    $_SESSION['patient'] = [
+    // Authentication successful — generate JWT tokens using SecurityBootstrap
+    require_once __DIR__ . '/../../security/bootstrap.php';
+    $jwt = SecurityBootstrap::getJWT();
+    
+    $userData = [
         'id'    => (int)$patientId,
         'name'  => $fullName,
+        'email' => $email,
         'mobile' => $mobile,
+        'role'  => 'patient'
     ];
 
+    $tokens = $jwt->generateTokens((int)$patientId, 'patient', [
+        'name'  => $fullName,
+        'email' => $email,
+        'mobile' => $mobile,
+    ]);
+
+    // Return successful response with tokens and user info
     jsonResponse([
-        'success' => true,
-        'message' => 'Account created successfully',
-        'patient' => [
-            'id'   => (int)$patientId,
-            'name' => $fullName,
-            'mobile' => $mobile,
-            'email' => $email,
-        ]
+        'success'      => true,
+        'message'      => 'Account created successfully',
+        'access_token' => $tokens['access_token'],
+        'refresh_token' => $tokens['refresh_token'],
+        'user'         => $userData
     ], 201);
 
 } catch (PDOException $e) {

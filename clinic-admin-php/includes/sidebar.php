@@ -1,4 +1,21 @@
-<?php $currentPage = $currentPage ?? basename($_SERVER['PHP_SELF'], '.php'); ?>
+<?php 
+$currentPage = $currentPage ?? basename($_SERVER['PHP_SELF'], '.php'); 
+
+// Map sub-pages to their parent menu items for active state
+$menuMapping = [
+    'appointment_view' => 'appointments',
+    'patient_view'     => 'patients',
+    'patient_form'     => 'patients',
+    'testimonial_form' => 'testimonials',
+    'about'            => 'settings',
+    'contact_settings' => 'settings',
+    'hero_management'  => 'hero_management',
+];
+$activeMenu = $menuMapping[$currentPage] ?? $currentPage;
+?>
+<!-- Sidebar Overlay for Mobile -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -17,19 +34,19 @@
     <nav class="sidebar-nav">
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a href="dashboard.php" class="nav-link <?= $currentPage === 'dashboard' ? 'active' : '' ?>">
+                <a href="dashboard.php" class="nav-link <?= $activeMenu === 'dashboard' ? 'active' : '' ?>">
                     <i class="bi bi-grid-1x2-fill"></i>
                     <span>Dashboard</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="appointments.php" class="nav-link <?= $currentPage === 'appointments' ? 'active' : '' ?>">
+                <a href="appointments.php" class="nav-link <?= $activeMenu === 'appointments' ? 'active' : '' ?>">
                     <i class="bi bi-calendar-check"></i>
                     <span>Appointments</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="followup.php" class="nav-link <?= $currentPage === 'followup' ? 'active' : '' ?>">
+                <a href="followup.php" class="nav-link <?= $activeMenu === 'followup' ? 'active' : '' ?>">
                     <i class="bi bi-telephone-outbound-fill"></i>
                     <span>Follow-Up</span>
                     <?php
@@ -42,19 +59,19 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a href="patients.php" class="nav-link <?= $currentPage === 'patients' ? 'active' : '' ?>">
+                <a href="patients.php" class="nav-link <?= $activeMenu === 'patients' ? 'active' : '' ?>">
                     <i class="bi bi-people-fill"></i>
                     <span>Patients</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="testimonials.php" class="nav-link <?= $currentPage === 'testimonials' ? 'active' : '' ?>">
+                <a href="testimonials.php" class="nav-link <?= $activeMenu === 'testimonials' ? 'active' : '' ?>">
                     <i class="bi bi-star-fill"></i>
                     <span>Testimonials</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="messages.php" class="nav-link <?= $currentPage === 'messages' ? 'active' : '' ?>">
+                <a href="messages.php" class="nav-link <?= $activeMenu === 'messages' ? 'active' : '' ?>">
                     <i class="bi bi-envelope-fill"></i>
                     <span>Messages</span>
                     <?php
@@ -66,28 +83,28 @@
                     ?>
                 </a>
             </li>
-            <li class="nav-item">
-                <a href="backups.php" class="nav-link <?= $currentPage === 'backups' ? 'active' : '' ?>">
-                    <i class="bi bi-database-fill-gear"></i>
-                    <span>Backups</span>
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="restore_backup.php" class="nav-link <?= $currentPage === 'restore_backup' ? 'active' : '' ?>">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                    <span>Restore Backup</span>
-                </a>
-            </li>
             <li class="sidebar-divider"></li>
             <li class="sidebar-section-title">Website</li>
             <li class="nav-item">
-                <a href="settings.php" class="nav-link <?= in_array($currentPage, ['settings', 'about', 'contact_settings']) ? 'active' : '' ?>">
+                <a href="hero_management.php" class="nav-link <?= $activeMenu === 'hero_management' ? 'active' : '' ?>">
+                    <i class="bi bi-images"></i>
+                    <span>Hero Images</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="clinic_status.php" class="nav-link <?= $activeMenu === 'clinic_status' ? 'active' : '' ?>">
+                    <i class="bi bi-megaphone-fill"></i>
+                    <span>Clinic Status</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="settings.php" class="nav-link <?= $activeMenu === 'settings' ? 'active' : '' ?>">
                     <i class="bi bi-gear-fill"></i>
                     <span>Settings</span>
                 </a>
             </li>
             <li class="nav-item">
-                <a href="legal_pages.php" class="nav-link <?= $currentPage === 'legal_pages' ? 'active' : '' ?>">
+                <a href="legal_pages.php" class="nav-link <?= $activeMenu === 'legal_pages' ? 'active' : '' ?>">
                     <i class="bi bi-file-earmark-text-fill"></i>
                     <span>Legal Pages</span>
                 </a>

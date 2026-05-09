@@ -1,0 +1,215 @@
+// Prisma Schema for Bansari Homeopathy Clinic
+// Database: bansari_clinic (MySQL)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(100)
+  email      String    @unique @db.VarChar(150)
+  password   String    @db.VarChar(255)
+  role       AdminRole @default(admin)
+  is_active  Boolean   @default(true) @db.TinyInt
+  last_login DateTime? @db.DateTime
+  created_at DateTime  @default(now()) @db.DateTime
+  updated_at DateTime  @updatedAt @db.DateTime
+
+  @@index([email])
+  @@index([is_active])
+  @@map("admins")
+}
+
+model Patient {
+  id            Int           @id @default(autoincrement())
+  full_name     String        @db.VarChar(150)
+  mobile        String        @db.VarChar(15)
+  age           Int?
+  gender        PatientGender?
+  city          String?       @db.VarChar(100)
+  address       String?       @db.VarChar(500)
+  email         String?       @db.VarChar(150)
+  password      String?       @db.VarChar(255)
+  is_registered Boolean       @default(false) @db.TinyInt
+  created_at    DateTime      @default(now()) @db.DateTime
+  updated_at    DateTime      @updatedAt @db.DateTime
+  appointments  Appointment[]
+
+  @@index([mobile])
+  @@index([full_name])
+  @@map("patients")
+}
+
+model Appointment {
+  id                    Int                  @id @default(autoincrement())
+  patient_id            Int
+  consultation_type     ConsultationType
+  form_type             FormType
+  appointment_date      DateTime             @db.Date
+  appointment_time      DateTime?            @db.Time
+  status                AppointmentStatus    @default(pending)
+  admin_notes           String?              @db.Text
+
+  // Reminder & Confirmation fields
+  reminder_sent         Boolean              @default(false) @db.TinyInt
+  reminder_sent_at      DateTime?            @db.DateTime
+  confirmation_status   ConfirmationStatus   @default(pending)
+  reply_source          ReplySource?
+  whatsapp_message_id   String?              @db.VarChar(255)
+  email_message_id      String?              @db.VarChar(255)
+  confirmed_at          DateTime?            @db.DateTime
+
+  // Confirmation email fields
+  confirmation_email_sent    Boolean          @default(false) @db.TinyInt
+  confirmation_email_sent_at DateTime?        @db.DateTime
+
+  // Follow-up fields
+  is_followup           Boolean              @default(false) @db.TinyInt
+  parent_appointment_id Int?
+  followup_created      Boolean              @default(false) @db.TinyInt
+  followup_done         Boolean              @default(false) @db.TinyInt
+
+  created_at            DateTime             @default(now()) @db.DateTime
+  updated_at            DateTime             @updatedAt @db.DateTime
+
+  // Relations
+  patient               Patient              @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  reminder_logs         ReminderLog[]
+  confirmation_tokens   ConfirmationToken[]
+
+  @@index([appointment_date])
+  @@index([status])
+  @@index([consultation_type])
+  @@index([reminder_sent])
+  @@index([confirmation_status])
+  @@index([confirmation_email_sent])
+  @@index([is_followup])
+  @@index([parent_appointment_id])
+  @@map("appointments")
+}
+
+model ReminderLog {
+  id                Int            @id @default(autoincrement())
+  appointment_id    Int
+  channel           ReminderChannel
+  status            ReminderStatus @default(queued)
+  message_id        String?        @db.VarChar(255)
+  recipient         String         @db.VarChar(255)
+  template_name     String?        @db.VarChar(100)
+  error_message     String?        @db.Text
+  patient_reply     String?        @db.Text
+  reply_received_at DateTime?      @db.DateTime
+  sent_at           DateTime?      @db.DateTime
+  created_at        DateTime       @default(now()) @db.DateTime
+  updated_at        DateTime       @updatedAt @db.DateTime
+
+  appointment       Appointment    @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@index([appointment_id])
+  @@index([status])
+  @@index([channel])
+  @@index([message_id])
+  @@index([created_at])
+  @@map("reminder_logs")
+}
+
+model ConfirmationToken {
+  id             Int           @id @default(autoincrement())
+  appointment_id Int
+  token          String        @unique @db.VarChar(64)
+  action         TokenAction
+  used           Boolean       @default(false) @db.TinyInt
+  expires_at     DateTime      @db.DateTime
+  used_at        DateTime?     @db.DateTime
+  created_at     DateTime      @default(now()) @db.DateTime
+
+  appointment    Appointment   @relation(fields: [appointment_id], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([appointment_id])
+  @@index([expires_at])
+  @@map("confirmation_tokens")
+}
+
+model ReminderRateLimit {
+  id             Int      @id @default(autoincrement())
+  admin_id       Int
+  appointment_id Int
+  action         String   @default("send_reminder") @db.VarChar(50)
+  attempted_at   DateTime @default(now()) @db.DateTime
+
+  @@index([admin_id, action])
+  @@index([appointment_id])
+  @@index([attempted_at])
+  @@map("reminder_rate_limits")
+}
+
+// Enums
+enum AdminRole {
+  super_admin
+  admin
+}
+
+enum PatientGender {
+  male
+  female
+  other
+}
+
+enum ConsultationType {
+  offline
+  online
+}
+
+enum FormType {
+  short
+  full
+}
+
+enum AppointmentStatus {
+  pending
+  confirmed
+  completed
+  cancelled
+}
+
+enum ConfirmationStatus {
+  pending
+  reminder_sent
+  confirmed
+  cancelled
+  no_response
+}
+
+enum ReplySource {
+  whatsapp
+  email
+  manual
+  auto
+  manual_whatsapp
+  manual_email
+}
+
+enum ReminderChannel {
+  whatsapp
+  email
+}
+
+enum ReminderStatus {
+  queued
+  sent
+  delivered
+  failed
+  replied
+}
+
+enum TokenAction {
+  confirm
+  cancel
+}

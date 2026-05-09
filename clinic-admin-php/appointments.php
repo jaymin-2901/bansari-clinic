@@ -215,7 +215,7 @@ require_once __DIR__ . '/includes/sidebar.php';
                 <tr><td colspan="9" class="text-center text-muted py-4">No appointments found</td></tr>
                 <?php else: ?>
                 <?php foreach ($appointments as $apt): ?>
-                <tr data-appointment-id="<?= $apt['id'] ?>">
+                <tr class="clickable-row" onclick="window.location.href='appointment_view.php?id=<?= $apt['id'] ?>'">
                     <td><strong>#<?= $apt['id'] ?></strong></td>
                     <td><?= clean($apt['full_name']) ?></td>
                     <td><?= clean($apt['mobile']) ?></td>

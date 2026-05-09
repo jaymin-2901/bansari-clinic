@@ -1,0 +1,59 @@
+# ============================================================
+# MediConnect – Apache Routing Configuration
+# File: backend-php/.htaccess
+# ============================================================
+# This file handles URL routing for the PHP backend on Apache servers
+# (InfinityFree, cPanel, shared hosting)
+
+# Enable RewriteEngine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Pass Authorization header to PHP (required for JWT)
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+    # Handle API requests - route to api/clinic/ directory
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^api/(.*)$ api/clinic/$1 [L,QSA]
+
+    # Handle uploads
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^uploads/(.*)$ ../../public/uploads/$1 [L,QSA]
+</IfModule>
+
+# PHP Settings
+<IfModule mod_php7.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_value error_log /home/vol13_6/infinityfree.com/htdocs/logs/php_errors.log
+</IfModule>
+
+# Security Headers
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set X-XSS-Protection "0"
+    Header always unset X-Powered-By
+    Header always unset Server
+</IfModule>
+
+# Deny access to sensitive files
+<FilesMatch "\.(env|log|sql|md|txt|bak|old|orig|swp)$">
+    Require all denied
+</FilesMatch>
+
+# Disable directory listing
+Options -Indexes
+
+# Fallback - if file doesn't exist, pass to router
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^$ router.php [L]
+</IfModule>
+

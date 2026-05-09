@@ -2,7 +2,8 @@
 header('Content-Type: application/json');
 
 // Test database connection and API
-require_once __DIR__ . '/config/clinic_config.php';
+// Load production config for InfinityFree database credentials and CORS
+require_once __DIR__ . '/config/production_config.php';
 require_once __DIR__ . '/config/clinic_db.php';
 
 // Try to get database

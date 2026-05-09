@@ -12,7 +12,20 @@
  *  - Persistent connections disabled (cleaner for cron)
  */
 
-require_once __DIR__ . '/config.php';
+// Load configuration based on environment
+// For local development: use config.php (localhost database)
+// For production (InfinityFree): set USE_PRODUCTION=true in environment or use clinic_config.php
+
+$useProduction = getenv('USE_PRODUCTION') === 'true';
+
+if ($useProduction && file_exists(__DIR__ . '/production_config.php')) {
+    require_once __DIR__ . '/production_config.php';
+} elseif (file_exists(__DIR__ . '/clinic_config.php')) {
+    // Load clinic_config for local development (localhost database)
+    require_once __DIR__ . '/clinic_config.php';
+} else {
+    require_once __DIR__ . '/config.php';
+}
 
 /**
  * Get a PDO database connection
@@ -37,10 +50,10 @@ function getDBConnection(): PDO
     );
 
     $options = [
-        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,   // Throw exceptions on error
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,         // Return associative arrays
-        PDO::ATTR_EMULATE_PREPARES   => false,                    // Use real prepared statements
-        PDO::ATTR_PERSISTENT         => false,                    // No persistent connections
+        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES   => false,
+        PDO::ATTR_PERSISTENT         => false,
         PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
     ];
 
@@ -48,37 +61,9 @@ function getDBConnection(): PDO
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
         return $pdo;
     } catch (PDOException $e) {
-        // MySQL failed, try SQLite fallback
-        $sqlitePath = dirname(__DIR__, 2) . '/database.sqlite';
-        
-        if (file_exists($sqlitePath)) {
-            try {
-                $sqliteDsn = 'sqlite:' . $sqlitePath;
-                $pdo = new PDO($sqliteDsn);
-                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-                $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-                
-                if (APP_ENV === 'development') {
-                    error_log("MySQL unavailable, using SQLite fallback");
-                }
-                return $pdo;
-            } catch (PDOException $sqliteErr) {
-                // Both failed
-                $logFile = LOG_DIR . '/db_errors.log';
-                $logMsg  = date('[Y-m-d H:i:s]') . ' DB Connection Failed (MySQL): ' . $e->getMessage() . ' | (SQLite): ' . $sqliteErr->getMessage() . PHP_EOL;
-                file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
-
-                if (APP_ENV === 'development') {
-                    throw $e;
-                }
-                die('Database connection error. Please try again later.');
-            }
-        }
-        
-        // SQLite not available either
         $logFile = LOG_DIR . '/db_errors.log';
-        $logMsg  = date('[Y-m-d H:i:s]') . ' DB Connection Failed: ' . $e->getMessage() . ' (SQLite fallback not available)' . PHP_EOL;
-        file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
+        $logMsg  = date('[Y-m-d H:i:s]') . ' DB Connection Failed: ' . $e->getMessage() . PHP_EOL;
+        @file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
 
         if (APP_ENV === 'development') {
             throw $e;
@@ -97,5 +82,6 @@ function writeLog(string $filename, string $message): void
 {
     $logFile = LOG_DIR . '/' . $filename;
     $logMsg  = date('[Y-m-d H:i:s]') . ' ' . $message . PHP_EOL;
-    file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
+    @file_put_contents($logFile, $logMsg, FILE_APPEND | LOCK_EX);
 }
+

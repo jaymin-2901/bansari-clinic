@@ -22,7 +22,7 @@ ob_implicit_flush(true);
 $dbHost = 'localhost';
 $dbUser = 'root';
 $dbPass = '';
-$dbName = 'mediconnect';
+$dbName = 'bansari_clinic';
 
 try {
     // Step 1: Connect to MySQL without database

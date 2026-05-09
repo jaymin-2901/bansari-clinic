@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'DELETE') {
         $stmt->execute([$id]);
         
         // Delete physical file - use the public/uploads path
-        $uploadDir = dirname(__DIR__, 3) . '/public/uploads/clinic-images/';
+        $uploadDir = dirname(__DIR__, 3) . '/uploads/clinic-images/';
         $filepath = $uploadDir . $image['image_path'];
         if (file_exists($filepath)) {
             unlink($filepath);

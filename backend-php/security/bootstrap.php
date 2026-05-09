@@ -42,8 +42,8 @@
 // Load dependencies
 require_once __DIR__ . '/../config/env_loader.php';
 require_once __DIR__ . '/../config/database.php';
-// Load clinic config for FRONTEND_URL (CORS)
-require_once __DIR__ . '/../config/clinic_config.php';
+// Load clinic_db which handles config selection (local vs production)
+require_once __DIR__ . '/../config/clinic_db.php';
 require_once __DIR__ . '/RateLimiter.php';
 require_once __DIR__ . '/JWTHandler.php';
 require_once __DIR__ . '/AuthMiddleware.php';
@@ -310,5 +310,43 @@ class SecurityBootstrap
         }
 
         $_SESSION['_security_user'] = $user;
+    }
+
+    /**
+     * Verify Google reCAPTCHA v2/v3 token.
+     * 
+     * @param string|null $token The response token from frontend
+     * @return bool True if verification succeeded
+     */
+    public static function verifyCaptcha(?string $token): bool
+    {
+        if (empty($token)) return false;
+
+        $secret = getEnvVar('RECAPTCHA_SECRET');
+        if (!$secret) {
+            // If secret is not configured, we allow it for development but log warning
+            error_log('[Security] RECAPTCHA_SECRET not configured. Skipping verification.');
+            return true; 
+        }
+
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "https://www.google.com/recaptcha/api/siteverify");
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'secret' => $secret,
+                'response' => $token,
+                'remoteip' => $_SERVER['REMOTE_ADDR']
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            curl_close($ch);
+
+            $result = json_decode($response, true);
+            return (isset($result['success']) && $result['success'] === true);
+        } catch (\Exception $e) {
+            error_log('[Security] reCAPTCHA verification failed: ' . $e->getMessage());
+            return false;
+        }
     }
 }

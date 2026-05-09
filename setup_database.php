@@ -7,9 +7,9 @@
  * http://localhost:8080/setup_database.php
  */
 
-// Database configuration - UPDATE THESE VALUES
+// Database configuration - Local Development
 $dbHost = 'localhost';
-$dbName = 'bansari_homeopathy';
+$dbName = 'bansari_clinic';
 $dbUser = 'root';
 $dbPass = '';
 

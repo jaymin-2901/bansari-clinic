@@ -68,6 +68,14 @@ if (empty($password)) {
     exit;
 }
 
+// ─── reCAPTCHA Verification ───
+$captchaToken = $input['captcha_token'] ?? '';
+if (!SecurityBootstrap::verifyCaptcha($captchaToken)) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'Security check failed. Please solve CAPTCHA.']);
+    exit;
+}
+
 // Clean mobile number
 if (!empty($mobile)) {
     $mobile = preg_replace('/[^0-9+]/', '', $mobile);

@@ -12,27 +12,37 @@
 // ─── Timezone ───
 date_default_timezone_set('Asia/Kolkata');
 
-// ─── Database ───
-define('DB_HOST', getenv('MC_DB_HOST') ?: 'localhost');
-define('DB_PORT', getenv('MC_DB_PORT') ?: '3307');
-define('DB_NAME', getenv('MC_DB_NAME') ?: 'mediconnect');
-define('DB_USER', getenv('MC_DB_USER') ?: 'root');
-define('DB_PASS', getenv('MC_DB_PASS') ?: '');
+// ─── Database (Local Development) ───
+if (!defined('DB_HOST')) {
+    define('DB_HOST', getenv('MC_DB_HOST') ?: 'localhost');
+    define('DB_PORT', getenv('MC_DB_PORT') ?: '3306');
+    define('DB_NAME', getenv('MC_DB_NAME') ?: 'bansari_clinic');
+    define('DB_USER', getenv('MC_DB_USER') ?: 'root');
+    define('DB_PASS', getenv('MC_DB_PASS') ?: '');
+}
 
 // ─── Reminder Settings ───
-// Time window around 24h mark (in minutes). Cron looks for appointments between NOW+23h55m and NOW+24h05m
-define('REMINDER_WINDOW_BEFORE_MINS', 5);  // 23h 55m
-define('REMINDER_WINDOW_AFTER_MINS', 5);   // 24h 05m
+if (!defined('REMINDER_WINDOW_BEFORE_MINS')) {
+    define('REMINDER_WINDOW_BEFORE_MINS', 5);
+    define('REMINDER_WINDOW_AFTER_MINS', 5);
+}
 
 // ─── Logging ───
-define('LOG_DIR', __DIR__ . '/../logs');
-if (!is_dir(LOG_DIR)) {
-    mkdir(LOG_DIR, 0755, true);
+if (!defined('LOG_DIR')) {
+    define('LOG_DIR', __DIR__ . '/../logs');
+    if (!is_dir(LOG_DIR)) {
+        mkdir(LOG_DIR, 0755, true);
+    }
 }
 
 // ─── Country Code (for phone formatting) ───
-define('DEFAULT_COUNTRY_CODE', '91'); // India
+if (!defined('DEFAULT_COUNTRY_CODE')) {
+    define('DEFAULT_COUNTRY_CODE', '91');
+}
 
 // ─── Application ───
-define('APP_NAME', 'MediConnect');
-define('APP_ENV', getenv('APP_ENV') ?: 'development'); // 'development' or 'production'
+if (!defined('APP_NAME')) {
+    define('APP_NAME', 'MediConnect');
+    define('APP_ENV', getenv('APP_ENV') ?: 'development');
+}
+

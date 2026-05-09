@@ -28,6 +28,19 @@ CREATE TABLE IF NOT EXISTS admins (
 INSERT INTO admins (name, email, password, role) VALUES
 ('Dr. Bansari Patel', 'admin@bansari.com', '$2y$10$SaK7s9jRLHtyX4fP4aOFceLi2qGe8PjBvS7AywxgDFgf22Obit.O.', 'super_admin');
 
+-- ─── LOGIN ATTEMPTS (Admin security) ───
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(150) NOT NULL,
+    ip_address VARCHAR(45) NULL,
+    user_agent VARCHAR(255) NULL,
+    success TINYINT(1) NOT NULL DEFAULT 0,
+    attempted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_attempted_at (attempted_at),
+    INDEX idx_success (success)
+) ENGINE=InnoDB;
+
 -- ─── 2. PATIENTS ───
 CREATE TABLE IF NOT EXISTS patients (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -221,6 +234,20 @@ INSERT INTO clinic_schedule (day_of_week, is_open, opening_time, closing_time, b
 (4, 1, '09:30:00', '20:00:00', '13:00:00', '17:00:00', 30, 15),
 (5, 1, '09:30:00', '20:00:00', '13:00:00', '17:00:00', 30, 15),
 (6, 1, '09:30:00', '20:00:00', '13:00:00', '17:00:00', 30, 15);
+
+-- ─── 12A. CLINIC STATUS / NOTICES ───
+CREATE TABLE IF NOT EXISTS clinic_status (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    message TEXT NOT NULL,
+    start_datetime DATETIME NOT NULL,
+    end_datetime DATETIME NOT NULL,
+    status ENUM('closed','open') NOT NULL DEFAULT 'closed',
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_active (is_active),
+    INDEX idx_start_end (start_datetime, end_datetime)
+) ENGINE=InnoDB;
 
 -- ─── 13. WEBSITE SETTINGS (Key-Value CMS) ───
 CREATE TABLE IF NOT EXISTS website_settings (
